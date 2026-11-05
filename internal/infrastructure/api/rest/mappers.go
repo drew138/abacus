@@ -467,25 +467,6 @@ func mapFormView(m domain.Movement, categories []domain.Category, today time.Tim
 	return view
 }
 
-func mapMenuView(m domain.Movement, categories []domain.Category) menuView {
-	view := menuView{ID: m.ID, Merchant: m.Merchant, Month: m.Month()}
-	sorted := append([]domain.Category(nil), categories...)
-	sort.Slice(sorted, func(i, j int) bool {
-		ti, tj := categoryTier(sorted[i].Name, sorted[i].Parent), categoryTier(sorted[j].Name, sorted[j].Parent)
-		if ti != tj {
-			return ti < tj
-		}
-		return sorted[i].Name < sorted[j].Name
-	})
-	for _, c := range sorted {
-		if c.Name == domain.CategorySavings {
-			continue
-		}
-		view.Options = append(view.Options, menuOptionView{Name: c.Name, Color: categoryColor(c.Name), Current: c.Name == m.Category})
-	}
-	return view
-}
-
 func mapMovementForm(values url.Values) MovementForm {
 	digits := strings.Map(func(r rune) rune {
 		if r >= '0' && r <= '9' {
@@ -544,10 +525,6 @@ func mapErrorPage(err error) (int, string) {
 		return http.StatusServiceUnavailable, "Abacus is busy right now. Try again in a moment."
 	}
 	return http.StatusInternalServerError, "Something went wrong. Try again, and reload the page if it keeps happening."
-}
-
-func mapImportResponse(added, updated, kept int) ImportResponse {
-	return ImportResponse{Added: added, Updated: updated, Kept: kept}
 }
 
 var domainErrors = []struct {

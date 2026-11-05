@@ -21,7 +21,3 @@ func mapMovementRow(m domain.Movement) movementRow {
 		Edited:      m.Edited,
 	}
 }
-
-func mapCategoryRow(c domain.Category) categoryRow {
-	return categoryRow{Name: c.Name, Parent: sql.NullString{String: c.Parent, Valid: c.Parent != ""}}
-}

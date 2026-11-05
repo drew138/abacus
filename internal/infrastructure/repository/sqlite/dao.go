@@ -48,17 +48,6 @@ func (r categoryRow) toDomain() domain.Category {
 	return domain.Category{Name: r.Name, Parent: r.Parent.String}
 }
 
-type monthRow struct {
-	Month     string
-	Spent     int64
-	Saved     int64
-	Movements int
-}
-
-func (r monthRow) toDomain() domain.MonthSummary {
-	return domain.MonthSummary{Month: r.Month, Spent: r.Spent, Saved: r.Saved, Movements: r.Movements}
-}
-
 type userRow struct {
 	ID           int64
 	Username     string
