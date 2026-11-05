@@ -25,6 +25,17 @@ database is Postgres 17, in its own container.
 - **Your account:** the first visit opens **Create account**. Once an account exists the page
   closes for good, so nobody else can register.
 
+## Releases
+
+Pushing a tag such as `v0.1.0` runs the tests and publishes two images for amd64 and arm64:
+
+- `ghcr.io/drew138/abacus:<tag>`: the app
+- `ghcr.io/drew138/abacus-migrate:<tag>`: golang-migrate with this version's migrations; run it
+  with `-database <postgres url> up` before the app
+
+and creates a GitHub release with generated notes. Every push to `main` and every pull request
+runs the unit and integration tests.
+
 ## Configuration
 
 | Variable | Default | |
