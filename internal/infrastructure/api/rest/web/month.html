@@ -1,3 +1,7 @@
+{{define "month-page"}}{{template "shell-top" .}}{{template "month" .Month}}{{template "shell-bottom" .}}{{end}}
+
+{{define "month-swap"}}<title>{{.Title}} · Abacus</title>{{template "month" .Month}}{{template "swap-extras" .}}{{end}}
+
 {{define "month"}}<header class="top">
   <div><h1>{{.Title}}</h1><div class="sub">{{.Spent}} spent · {{.Purchases}} purchases{{if .HasPrevious}}{{if .Delta.Text}} · <span class="{{.Delta.Class}}">{{.Delta.Text}}</span> vs {{.PreviousName}}{{end}}{{end}}</div></div>
   {{template "ctrls" .Key}}
@@ -34,6 +38,6 @@
   <div style="min-width:0"><div class="t"><span>{{.Merchant}}</span><small>{{.Day}}</small></div>
   <div class="tags">{{if .IsSavings}}<span class="chip" style="cursor:default"><span class="dot" style="background:{{.Color}}"></span>Savings</span>{{else}}<button class="chip" title="Change category" hx-get="/movements/{{.ID}}/categories" hx-target="#pop" data-pop><span class="dot" style="background:{{.Color}}"></span>{{.Category}} ▾</button>{{end}}<span class="tag">{{.Method}}</span>{{if .Manual}}<span class="tag hand">Added by hand</span>{{end}}{{if .Edited}}<span class="tag ed">Edited</span>{{end}}{{with .Note}}<span class="note-t">{{.}}</span>{{end}}</div></div>
   <div class="a">{{if .IsSavings}}→ {{end}}{{.Amount}}</div>
-  <div class="acts"><button class="ibtn" title="Edit" aria-label="Edit {{.Merchant}}" hx-get="/movements/{{.ID}}/edit" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg></button><button class="ibtn del" title="Delete" aria-label="Delete {{.Merchant}}" hx-get="/movements/{{.ID}}/delete" hx-target="#mv-{{.ID}}" hx-swap="outerHTML"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5"/></svg></button></div>
+  <div class="acts"><button class="ibtn" title="Edit" aria-label="Edit {{.Merchant}}" hx-get="/movements/{{.ID}}/update-form" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg></button><button class="ibtn del" title="Delete" aria-label="Delete {{.Merchant}}" hx-get="/movements/{{.ID}}/delete" hx-target="#mv-{{.ID}}" hx-swap="outerHTML"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5"/></svg></button></div>
   {{if .Confirm}}<div class="confirm"><span>Delete {{.Merchant}}, {{.Amount}}? It is removed from this month's totals.</span><button class="btn" hx-get="/movements/{{.ID}}/row" hx-target="#mv-{{.ID}}" hx-swap="outerHTML">Keep</button><button class="btn danger solid" hx-delete="/movements/{{.ID}}">Delete</button></div>{{end}}
 </div>{{end}}

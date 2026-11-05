@@ -43,7 +43,3 @@ type ImportResponse struct {
 	Updated int `json:"updated"`
 	Kept    int `json:"kept"`
 }
-
-func mapImportResponse(added, updated, kept int) ImportResponse {
-	return ImportResponse{Added: added, Updated: updated, Kept: kept}
-}

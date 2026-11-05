@@ -23,5 +23,5 @@ func (h *Handler) categoryMenu(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	h.render(w, r, http.StatusOK, "menu", mapMenuView(movement, categories))
+	h.render(w, r, http.StatusOK, "menu", mapCategoryMenuView(movement, categories))
 }

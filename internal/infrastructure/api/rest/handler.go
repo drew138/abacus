@@ -15,8 +15,10 @@ import (
 	"log/slog"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -30,25 +32,48 @@ var web embed.FS
 const (
 	sessionCookie             = "abacus_session"
 	statusClientClosedRequest = 499
+	categoryOther             = "Other"
+	groupFood                 = "Food and eating out"
 )
 
 var (
 	errMalformedBody  = errors.New("malformed body")
+	errMalformedForm  = errors.New("malformed form")
 	errBadImportToken = errors.New("bad import token")
 	errCrossSite      = errors.New("cross-site request")
 	errInvalidMonth   = errors.New("invalid month")
 	errInvalidID      = errors.New("invalid movement id")
-	errMalformedForm  = errors.New("malformed form")
-	enums             = map[string]func(string) bool{"method": func(v string) bool { return domain.Method(v).Valid() }}
-	formFieldMessages = map[string]string{
-		"merchant": "Enter who the money went to, up to 120 characters.",
-		"amount":   "Enter the amount in pesos, for example 25.000.",
-		"date":     "Pick the date it happened.",
-		"category": "Pick a category from the list.",
-		"method":   "Pick how it was paid.",
-		"note":     "Keep the note under 200 characters.",
-	}
 )
+
+var enums = map[string]func(string) bool{
+	"method": func(v string) bool { return domain.Method(v).Valid() },
+}
+
+var categoryColors = map[string]string{
+	"Restaurants and cafés":             "#e0763a",
+	"Food delivery":                     "#f0a35e",
+	"Groceries":                         "#c9a227",
+	"Snacks and candy":                  "#b7791f",
+	"Transfers to people":               "#d9534f",
+	"Rides and transport":               "#7c5cdb",
+	"Gym and fitness":                   "#1f9d74",
+	"Phone, internet and subscriptions": "#2b6fd6",
+	"Online shopping":                   "#d14d8b",
+	"Pharmacy and health":               "#0e9fb0",
+	"Gaming":                            "#5865c9",
+	"Entertainment":                     "#e87ba4",
+	"Travel":                            "#3d8fb0",
+	categoryOther:                       "#8a909c",
+	domain.CategorySavings:              "#15803d",
+	groupFood:                           "#e0763a",
+}
+
+var spareColors = []string{"#a0622d", "#b5179e", "#6f8f00", "#3d5a99", "#d98e04", "#008300", "#e34948", "#0096b4"}
+
+var methodLabels = map[domain.Method]string{
+	domain.MethodCredit: "Credit Card",
+	domain.MethodDebit:  "Bank Transfer",
+}
 
 type Application interface {
 	ListMonths(ctx context.Context) ([]domain.MonthSummary, error)
@@ -76,7 +101,6 @@ type Handler struct {
 	static       http.Handler
 	importToken  string
 	secureCookie bool
-	now          func() time.Time
 	zone         *time.Location
 }
 
@@ -93,7 +117,15 @@ func New(router chi.Router, app Application, importToken string, secureCookie bo
 	if err != nil {
 		return nil, fmt.Errorf("parsing templates: %w", err)
 	}
-	h := &Handler{app: app, validate: newValidator(), templates: templates, static: http.StripPrefix("/static/", http.FileServer(http.FS(static))), importToken: importToken, secureCookie: secureCookie, now: time.Now, zone: time.FixedZone("America/Bogota", -5*60*60)}
+	h := &Handler{
+		app:          app,
+		validate:     newValidator(),
+		templates:    templates,
+		static:       http.StripPrefix("/static/", http.FileServer(http.FS(static))),
+		importToken:  importToken,
+		secureCookie: secureCookie,
+		zone:         time.FixedZone("America/Bogota", -5*60*60),
+	}
 
 	router.Get("/static/*", h.logged(h.getStatic))
 	router.Get("/logo.svg", h.logged(h.getLogo))
@@ -107,8 +139,8 @@ func New(router chi.Router, app Application, importToken string, secureCookie bo
 	router.Get("/months/{month}", h.logged(h.authed(h.getMonth)))
 	router.Get("/months/{month}/expenses", h.logged(h.authed(h.getExpenses)))
 	router.Get("/trends", h.logged(h.authed(h.getTrends)))
-	router.Get("/movements/new", h.logged(h.authed(h.newMovement)))
-	router.Get("/movements/{id}/edit", h.logged(h.authed(h.editMovement)))
+	router.Get("/movements/create-form", h.logged(h.authed(h.getCreateMovementForm)))
+	router.Get("/movements/{id}/update-form", h.logged(h.authed(h.getUpdateMovementForm)))
 	router.Get("/movements/{id}/row", h.logged(h.authed(h.getRow)))
 	router.Get("/movements/{id}/delete", h.logged(h.authed(h.confirmDelete)))
 	router.Get("/movements/{id}/categories", h.logged(h.authed(h.categoryMenu)))
@@ -159,11 +191,38 @@ func newValidator() *validator.Validate {
 	return v
 }
 
+func (h *Handler) validateRequest(r *http.Request, dst any) error {
+	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+		var wrongType *json.UnmarshalTypeError
+		if errors.As(err, &wrongType) {
+			return err
+		}
+		return fmt.Errorf("%w: %w", errMalformedBody, err)
+	}
+	return h.validate.Struct(dst)
+}
+
 func (h *Handler) parseForm(r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
 		return fmt.Errorf("%w: %w", errMalformedForm, err)
 	}
 	return nil
+}
+
+func parseMonth(r *http.Request) (string, error) {
+	month := chi.URLParam(r, "month")
+	if _, err := time.Parse("2006-01", month); err != nil || len(month) != 7 {
+		return "", errInvalidMonth
+	}
+	return month, nil
+}
+
+func parseID(r *http.Request) (int64, error) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil || id <= 0 {
+		return 0, errInvalidID
+	}
+	return id, nil
 }
 
 func isHTMX(r *http.Request) bool {
@@ -215,6 +274,17 @@ func isSameOrigin(r *http.Request) bool {
 	return host == r.Host
 }
 
+func (h *Handler) importer(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		got, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if !ok || subtle.ConstantTimeCompare([]byte(got), []byte(h.importToken)) != 1 {
+			h.writeAPIError(w, errBadImportToken)
+			return
+		}
+		next(w, r)
+	}
+}
+
 func sessionToken(r *http.Request) string {
 	c, err := r.Cookie(sessionCookie)
 	if err != nil {
@@ -236,7 +306,7 @@ func (h *Handler) setSessionCookie(w http.ResponseWriter, value string, expires 
 }
 
 func (h *Handler) today() time.Time {
-	return h.now().In(h.zone)
+	return time.Now().In(h.zone)
 }
 
 func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, name string, data any) {
@@ -253,55 +323,71 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, nam
 	_, _ = w.Write(buf.Bytes())
 }
 
-func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, page pageView) {
-	if isHTMX(r) {
-		h.render(w, r, http.StatusOK, "swap", page)
-		return
-	}
-	h.render(w, r, http.StatusOK, "layout", page)
+func (h *Handler) showMonth(w http.ResponseWriter, month, message string, undoID int64) {
+	location, _ := json.Marshal(map[string]string{"path": "/months/" + month, "target": "#main"})
+	w.Header().Set("HX-Location", string(location))
+	h.toast(w, message, undoID)
+	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) renderAfterChange(w http.ResponseWriter, r *http.Request, month string, toast toastView) {
-	page, err := h.monthPage(r.Context(), month, expenseFilter{})
-	if err != nil {
-		h.writeError(w, r, err)
-		return
+func (h *Handler) toast(w http.ResponseWriter, message string, undoID int64) {
+	payload := map[string]any{"message": message}
+	if undoID > 0 {
+		payload["undo"] = undoID
 	}
-	page.Toast = &toast
-	page.CloseModal = true
-	w.Header().Set("HX-Retarget", "#main")
-	w.Header().Set("HX-Reswap", "innerHTML")
-	w.Header().Set("HX-Push-Url", "/months/"+month)
-	h.render(w, r, http.StatusOK, "swap", page)
+	body, _ := json.Marshal(map[string]any{"toast": payload})
+	w.Header().Set("HX-Trigger", asciiJSON(body))
 }
 
-func (h *Handler) monthPage(ctx context.Context, month string, filter expenseFilter) (pageView, error) {
-	report, months, err := h.loadMonthReport(ctx, month, filter)
-	if err != nil {
-		return pageView{}, err
+func asciiJSON(body []byte) string {
+	var b strings.Builder
+	for len(body) > 0 {
+		r, size := utf8.DecodeRune(body)
+		body = body[size:]
+		switch {
+		case r < 0x80:
+			b.WriteRune(r)
+		case r > 0xFFFF:
+			r -= 0x10000
+			fmt.Fprintf(&b, `\u%04x\u%04x`, 0xD800+(r>>10), 0xDC00+(r&0x3FF))
+		default:
+			fmt.Fprintf(&b, `\u%04x`, r)
+		}
 	}
-	view := mapMonthView(report)
-	return pageView{Title: view.Title, Sidebar: mapSidebarView(months, month), Month: &view}, nil
+	return b.String()
 }
 
-func (h *Handler) loadMonthReport(ctx context.Context, month string, filter expenseFilter) (monthReport, []domain.MonthSummary, error) {
-	months, err := h.app.ListMonths(ctx)
-	if err != nil {
-		return monthReport{}, nil, err
+func categoryColor(name string) string {
+	if c, ok := categoryColors[name]; ok {
+		return c
 	}
-	categories, err := h.app.ListCategories(ctx)
-	if err != nil {
-		return monthReport{}, nil, err
+	var hash uint32
+	for _, r := range name {
+		hash = hash*31 + uint32(r)
 	}
-	totals, err := h.app.CategoryTotals(ctx)
-	if err != nil {
-		return monthReport{}, nil, err
+	return spareColors[hash%uint32(len(spareColors))]
+}
+
+func categoryTier(name, parent string) int {
+	switch {
+	case name == domain.CategorySavings:
+		return 0
+	case name == groupFood || parent == groupFood:
+		return 1
+	case name == categoryOther:
+		return 3
 	}
-	movements, err := h.app.ListMovements(ctx, month)
-	if err != nil {
-		return monthReport{}, nil, err
-	}
-	return buildMonthReport(month, filter, categories, months, totals, movements), months, nil
+	return 2
+}
+
+func monthName(key string) string {
+	t, _ := time.Parse("2006-01", key)
+	return t.Format("January 2006")
+}
+
+func monthShort(key string) string {
+	t, _ := time.Parse("2006-01", key)
+	return t.Format("Jan")
 }
 
 type responseRecorder struct {
@@ -334,65 +420,109 @@ func (h *Handler) logged(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, err error) {
+func (h *Handler) record(w http.ResponseWriter, err error) bool {
 	rr, recorded := w.(*responseRecorder)
 	if errors.Is(err, context.Canceled) {
 		if recorded {
 			rr.status = statusClientClosedRequest
 		}
-		return
+		return false
 	}
 	if recorded {
 		rr.err = err
 	}
-	status, message := mapErrorPage(err)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if isHTMX(r) {
-		w.Header().Set("HX-Reswap", "none")
-		var buf bytes.Buffer
-		_ = h.templates.ExecuteTemplate(&buf, "toast-oob", toastView{Message: message})
-		w.WriteHeader(status)
-		_, _ = w.Write(buf.Bytes())
+	return true
+}
+
+func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, err error) {
+	if !h.record(w, err) {
 		return
 	}
+	status, message := errorPage(err)
+	if isHTMX(r) {
+		w.Header().Set("HX-Reswap", "none")
+		h.toast(w, message, 0)
+		w.WriteHeader(status)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
 	_, _ = fmt.Fprintf(w, "<!doctype html><title>Abacus</title><p>%s</p><p><a href=\"/\">Back to Abacus</a></p>", template.HTMLEscapeString(message))
 }
 
-func (h *Handler) validateRequest(r *http.Request, dst any) error {
-	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
-		var wrongType *json.UnmarshalTypeError
-		if errors.As(err, &wrongType) {
-			return err
-		}
-		return fmt.Errorf("%w: %w", errMalformedBody, err)
+func errorPage(err error) (int, string) {
+	switch {
+	case errors.Is(err, errMalformedForm):
+		return http.StatusBadRequest, "That form could not be read. Reload the page and try again."
+	case errors.Is(err, errCrossSite):
+		return http.StatusForbidden, "That request did not come from Abacus. Reload the page and try again."
+	case errors.Is(err, errInvalidMonth):
+		return http.StatusBadRequest, "That month does not exist. Pick one from the sidebar."
+	case errors.Is(err, errInvalidID):
+		return http.StatusBadRequest, "That movement does not exist. Reload the month."
+	case errors.Is(err, domain.ErrUnknownCategory):
+		return http.StatusBadRequest, "Pick a category from the list."
+	case errors.Is(err, domain.ErrNotFound):
+		return http.StatusNotFound, "That movement no longer exists. Reload the month."
+	case errors.Is(err, domain.ErrInvalid):
+		return http.StatusBadRequest, "Abacus could not accept that. Check the values and try again."
+	case errors.Is(err, domain.ErrUnavailable), errors.Is(err, context.DeadlineExceeded):
+		return http.StatusServiceUnavailable, "Abacus is busy right now. Try again in a moment."
 	}
-	return h.validate.Struct(dst)
+	return http.StatusInternalServerError, "Something went wrong. Try again, and reload the page if it keeps happening."
 }
 
-func (h *Handler) importer(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		got, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if !ok || subtle.ConstantTimeCompare([]byte(got), []byte(h.importToken)) != 1 {
-			h.writeAPIError(w, errBadImportToken)
-			return
-		}
-		next(w, r)
-	}
+type ErrorResponse struct {
+	Type   string        `json:"type"`
+	Title  string        `json:"title"`
+	Status int           `json:"status"`
+	Errors []ErrorDetail `json:"errors,omitempty"`
 }
+
+type ErrorDetail struct {
+	Code  string `json:"code"`
+	Field string `json:"field,omitempty"`
+	Param string `json:"param,omitempty"`
+}
+
+var domainErrors = []struct {
+	err    error
+	status int
+	code   string
+	field  string
+}{
+	{domain.ErrUnknownCategory, http.StatusBadRequest, "unknown_category", "category"},
+}
+
+var errorKinds = []struct {
+	err    error
+	status int
+	typ    string
+	title  string
+}{
+	{domain.ErrNotFound, http.StatusNotFound, "not_found", "The resource does not exist."},
+	{domain.ErrConflict, http.StatusConflict, "resource_conflict", "The request conflicts with existing data."},
+	{domain.ErrInvalid, http.StatusBadRequest, "invalid_argument", "The request is invalid."},
+	{domain.ErrUnavailable, http.StatusServiceUnavailable, "service_unavailable", "The service is temporarily unavailable."},
+	{context.DeadlineExceeded, http.StatusServiceUnavailable, "service_unavailable", "The service is temporarily unavailable."},
+}
+
+var tagCodes = map[string]string{
+	"required": "value_required",
+	"oneof":    "invalid_option",
+	"enum":     "invalid_option",
+	"datetime": "invalid_date",
+}
+
+var lengthCodes = map[string]string{"max": "max_length", "lte": "max_length", "min": "min_length", "gte": "min_length", "len": "length_mismatch"}
+
+var numberCodes = map[string]string{"max": "less_than_or_equal", "lte": "less_than_or_equal", "lt": "less_than", "min": "greater_than_or_equal", "gte": "greater_than_or_equal", "gt": "greater_than"}
 
 func (h *Handler) writeAPIError(w http.ResponseWriter, err error) {
-	rr, recorded := w.(*responseRecorder)
-	if errors.Is(err, context.Canceled) {
-		if recorded {
-			rr.status = statusClientClosedRequest
-		}
+	if !h.record(w, err) {
 		return
 	}
-	if recorded {
-		rr.err = err
-	}
-	body := mapErrorResponse(err)
+	body := errorResponse(err)
 	h.writeJSON(w, body.Status, body)
 }
 
@@ -400,6 +530,72 @@ func (h *Handler) writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+func errorResponse(err error) ErrorResponse {
+	var wrongType *json.UnmarshalTypeError
+	var failed validator.ValidationErrors
+	switch {
+	case errors.As(err, &wrongType):
+		return ErrorResponse{Type: "invalid_argument", Title: "The request has invalid fields.", Status: http.StatusBadRequest,
+			Errors: []ErrorDetail{{Code: "invalid_type", Field: wrongType.Field, Param: jsonType(wrongType.Type)}}}
+	case errors.Is(err, errMalformedBody):
+		return ErrorResponse{Type: "malformed_request", Title: "The request body is not valid JSON.", Status: http.StatusBadRequest}
+	case errors.Is(err, errBadImportToken):
+		return ErrorResponse{Type: "unauthenticated", Title: "A valid import token is required.", Status: http.StatusUnauthorized}
+	case errors.As(err, &failed):
+		return ErrorResponse{Type: "invalid_argument", Title: "The request has invalid fields.", Status: http.StatusBadRequest, Errors: validationDetails(failed)}
+	}
+
+	var details []ErrorDetail
+	status := 0
+	for _, d := range domainErrors {
+		if errors.Is(err, d.err) {
+			if status == 0 {
+				status = d.status
+			}
+			details = append(details, ErrorDetail{Code: d.code, Field: d.field})
+		}
+	}
+	for _, k := range errorKinds {
+		if errors.Is(err, k.err) {
+			if status == 0 {
+				status = k.status
+			}
+			return ErrorResponse{Type: k.typ, Title: k.title, Status: status, Errors: details}
+		}
+	}
+	return ErrorResponse{Type: "internal_error", Title: "Something went wrong.", Status: http.StatusInternalServerError}
+}
+
+func validationDetails(failed validator.ValidationErrors) []ErrorDetail {
+	details := make([]ErrorDetail, 0, len(failed))
+	for _, fe := range failed {
+		field := fe.Field()
+		if _, path, ok := strings.Cut(fe.Namespace(), "."); ok {
+			field = path
+		}
+		code, param := "invalid_value", ""
+		switch fe.Kind() {
+		case reflect.String, reflect.Slice, reflect.Array, reflect.Map:
+			if c, ok := lengthCodes[fe.Tag()]; ok {
+				code, param = c, fe.Param()
+			}
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64:
+			if c, ok := numberCodes[fe.Tag()]; ok {
+				code, param = c, fe.Param()
+			}
+		}
+		if code == "invalid_value" {
+			if c, ok := tagCodes[fe.Tag()]; ok {
+				code = c
+			}
+		}
+		details = append(details, ErrorDetail{Code: code, Field: field, Param: param})
+	}
+	return details
 }
 
 func jsonType(t reflect.Type) string {

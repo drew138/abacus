@@ -22,7 +22,7 @@ func (r *Repository) Months(ctx context.Context) ([]domain.MonthSummary, error) 
 
 	var months []domain.MonthSummary
 	for rows.Next() {
-		var row monthRow
+		var row monthsRow
 		if err := rows.Scan(&row.Month, &row.Spent, &row.Saved, &row.Movements); err != nil {
 			return nil, domainError(err, "reading a month")
 		}

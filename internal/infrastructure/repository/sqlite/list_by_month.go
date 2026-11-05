@@ -23,7 +23,7 @@ func (r *Repository) ListByMonth(ctx context.Context, month string) ([]domain.Mo
 
 	movements := []domain.Movement{}
 	for rows.Next() {
-		row, err := scanMovement(rows.Scan)
+		row, err := scanListByMonthMovement(rows.Scan)
 		if err != nil {
 			return nil, domainError(err, "reading a movement")
 		}

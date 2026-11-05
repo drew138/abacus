@@ -16,7 +16,7 @@ func (h *Handler) postRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	form := RegisterForm{Username: r.PostForm.Get("username"), Password: r.PostForm.Get("password"), Confirm: r.PostForm.Get("confirm")}
 	if err := h.validate.Struct(form); err != nil {
-		h.render(w, r, http.StatusBadRequest, "register", loginView{Error: mapRegisterError(err), Username: form.Username})
+		h.render(w, r, http.StatusBadRequest, "register", postRegisterView{Error: mapRegisterError(err), Username: form.Username})
 		return
 	}
 
@@ -26,7 +26,7 @@ func (h *Handler) postRegister(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	case errors.Is(err, domain.ErrPasswordTooShort):
-		h.render(w, r, http.StatusBadRequest, "register", loginView{Error: mapRegisterError(err), Username: form.Username})
+		h.render(w, r, http.StatusBadRequest, "register", postRegisterView{Error: mapRegisterError(err), Username: form.Username})
 		return
 	case err != nil:
 		h.writeError(w, r, err)

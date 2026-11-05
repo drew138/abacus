@@ -40,12 +40,24 @@ document.body.addEventListener("htmx:afterSwap", e => {
 });
 
 let toastTimer;
-new MutationObserver(() => {
-  clearTimeout(toastTimer);
+function showToast(detail) {
   const area = byId("toast-area");
-  if (!area.innerHTML.trim()) return;
-  toastTimer = setTimeout(() => { area.innerHTML = ""; }, area.querySelector("[hx-post]") ? 6000 : 3500);
-}).observe(byId("toast-area"), { childList: true, subtree: true });
+  const toast = el("div", "toast");
+  toast.setAttribute("role", "status");
+  toast.append(el("span", null, detail.message));
+  if (detail.undo) {
+    const undo = el("button", null, "Undo");
+    undo.addEventListener("click", () => {
+      area.replaceChildren();
+      htmx.ajax("POST", "/movements/" + detail.undo + "/restore", { swap: "none" });
+    });
+    toast.append(undo);
+  }
+  area.replaceChildren(toast);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => area.replaceChildren(), detail.undo ? 6000 : 3500);
+}
+document.body.addEventListener("toast", e => showToast(e.detail));
 
 function hiSlice(k) {
   const svg = document.querySelector(".donut");

@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-func New() (string, error) {
+func Create() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("reading random bytes: %w", err)

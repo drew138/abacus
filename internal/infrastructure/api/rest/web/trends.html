@@ -1,3 +1,7 @@
+{{define "trends-page"}}{{template "shell-top" .}}{{template "trends" .Trends}}{{template "shell-bottom" .}}{{end}}
+
+{{define "trends-swap"}}<title>{{.Title}} · Abacus</title>{{template "trends" .Trends}}{{template "swap-extras" .}}{{end}}
+
 {{define "trends"}}<header class="top">
   <div><h1>Month to month</h1><div class="sub">{{.Subtitle}}</div></div>
   {{template "ctrls" ""}}

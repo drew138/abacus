@@ -3,15 +3,14 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/drew138/abacus/pkg/pesos"
 )
 
 func (h *Handler) deleteMovement(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil || id <= 0 {
-		h.writeError(w, r, errInvalidID)
+	id, err := parseID(r)
+	if err != nil {
+		h.writeError(w, r, err)
 		return
 	}
 	movement, err := h.app.GetMovement(r.Context(), id)
@@ -23,5 +22,5 @@ func (h *Handler) deleteMovement(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	h.renderAfterChange(w, r, movement.Month(), toastView{Message: fmt.Sprintf("Deleted %s, %s.", movement.Merchant, pesos(movement.Amount)), UndoID: id})
+	h.showMonth(w, movement.Month(), fmt.Sprintf("Deleted %s, %s.", movement.Merchant, pesos.Format(movement.Amount)), id)
 }

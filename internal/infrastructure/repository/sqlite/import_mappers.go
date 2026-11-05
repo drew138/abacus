@@ -6,8 +6,8 @@ import (
 	"github.com/drew138/abacus/internal/domain"
 )
 
-func mapMovementRow(m domain.Movement) movementRow {
-	return movementRow{
+func mapImportMovementRow(m domain.Movement) importMovementRow {
+	return importMovementRow{
 		ID:          m.ID,
 		Ref:         sql.NullString{String: m.Ref, Valid: m.Ref != ""},
 		OccurredOn:  m.Date.Format(dateLayout),

@@ -14,13 +14,13 @@ func (h *Handler) postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	form := LoginForm{Username: r.PostForm.Get("username"), Password: r.PostForm.Get("password")}
 	if err := h.validate.Struct(form); err != nil {
-		h.render(w, r, http.StatusBadRequest, "login", loginView{Error: "Enter your username and password.", Username: form.Username})
+		h.render(w, r, http.StatusBadRequest, "login", postLoginView{Error: "Enter your username and password.", Username: form.Username})
 		return
 	}
 
 	raw, expiresAt, err := h.app.LogIn(r.Context(), form.Username, form.Password)
 	if errors.Is(err, domain.ErrInvalidCredentials) {
-		h.render(w, r, http.StatusUnauthorized, "login", loginView{Error: "That username and password don’t match. Try again.", Username: form.Username})
+		h.render(w, r, http.StatusUnauthorized, "login", postLoginView{Error: "That username and password don’t match. Try again.", Username: form.Username})
 		return
 	}
 	if err != nil {

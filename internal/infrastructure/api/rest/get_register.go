@@ -12,5 +12,5 @@ func (h *Handler) getRegister(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	h.render(w, r, http.StatusOK, "register", loginView{})
+	h.render(w, r, http.StatusOK, "register", getRegisterView{})
 }

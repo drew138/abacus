@@ -3,15 +3,12 @@ package rest
 import (
 	"fmt"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func (h *Handler) restoreMovement(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
-	if err != nil || id <= 0 {
-		h.writeError(w, r, errInvalidID)
+	id, err := parseID(r)
+	if err != nil {
+		h.writeError(w, r, err)
 		return
 	}
 	if err := h.app.RestoreMovement(r.Context(), id); err != nil {
@@ -23,5 +20,5 @@ func (h *Handler) restoreMovement(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	h.renderAfterChange(w, r, movement.Month(), toastView{Message: fmt.Sprintf("%s is back.", movement.Merchant)})
+	h.showMonth(w, movement.Month(), fmt.Sprintf("%s is back.", movement.Merchant), 0)
 }

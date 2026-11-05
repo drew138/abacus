@@ -1,30 +1,29 @@
 package rest
 
-import (
-	"net/http"
-	"time"
-
-	"github.com/go-chi/chi/v5"
-)
+import "net/http"
 
 func (h *Handler) getExpenses(w http.ResponseWriter, r *http.Request) {
-	month := chi.URLParam(r, "month")
-	if _, err := time.Parse("2006-01", month); err != nil || len(month) != 7 {
-		h.writeError(w, r, errInvalidMonth)
-		return
-	}
-	query := r.URL.Query()
-	filter := expenseFilter{Category: limit(query.Get("category"), 60), Search: limit(query.Get("q"), 120)}
-
-	report, _, err := h.loadMonthReport(r.Context(), month, filter)
+	month, err := parseMonth(r)
 	if err != nil {
 		h.writeError(w, r, err)
 		return
 	}
-	h.render(w, r, http.StatusOK, "expenses", mapExpensesView(report))
+	query := getExpensesQuery{Category: limitGetExpenses(r.URL.Query().Get("category"), 60), Search: limitGetExpenses(r.URL.Query().Get("q"), 120)}
+
+	categories, err := h.app.ListCategories(r.Context())
+	if err != nil {
+		h.writeError(w, r, err)
+		return
+	}
+	movements, err := h.app.ListMovements(r.Context(), month)
+	if err != nil {
+		h.writeError(w, r, err)
+		return
+	}
+	h.render(w, r, http.StatusOK, "expenses", mapGetExpensesView(month, query, categories, movements))
 }
 
-func limit(s string, n int) string {
+func limitGetExpenses(s string, n int) string {
 	runes := []rune(s)
 	if len(runes) > n {
 		return string(runes[:n])

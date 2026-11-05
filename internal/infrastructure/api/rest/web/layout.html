@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="{{asset "app.css"}}">{{end}}
 
-{{define "layout"}}<!doctype html>
+{{define "shell-top"}}<!doctype html>
 <html lang="en">
 <head>
 {{template "head"}}
@@ -19,21 +19,21 @@
     <form class="outf" method="post" action="/logout"><button class="out" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3H3.5v10H6M10 5l3 3-3 3M13 8H6"/></svg></button></form>
   </nav>
   {{template "sidebar" .Sidebar}}
-  <main class="main" id="main">{{template "main" .}}</main>
+  <main class="main" id="main">{{end}}
+
+{{define "shell-bottom"}}</main>
 </div>
 <div class="pop" id="pop"></div>
 <div id="modal"></div>
-<div id="toast-area">{{with .Toast}}{{template "toast" .}}{{end}}</div>
+<div id="toast-area"></div>
 </body>
 </html>{{end}}
 
-{{define "swap"}}<title>{{.Title}} · Abacus</title>{{template "main" .}}{{template "sidebar-oob" .Sidebar}}{{if .CloseModal}}<div id="modal" hx-swap-oob="innerHTML"></div>{{end}}{{with .Toast}}<div id="toast-area" hx-swap-oob="innerHTML">{{template "toast" .}}</div>{{end}}{{end}}
-
-{{define "main"}}{{if .Month}}{{template "month" .Month}}{{else if .Trends}}{{template "trends" .Trends}}{{end}}{{end}}
+{{define "swap-extras"}}{{template "sidebar-oob" .Sidebar}}<div id="modal" hx-swap-oob="innerHTML"></div><div id="pop" class="pop" hx-swap-oob="innerHTML"></div>{{end}}
 
 {{define "ctrls"}}<div class="ctrls">
   <form method="post" action="/logout"><button class="btn out-m">Sign out</button></form>
-  <button class="btn primary" hx-get="/movements/new{{if .}}?month={{.}}{{end}}" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Add movement</button>
+  <button class="btn primary" hx-get="/movements/create-form{{if .}}?month={{.}}{{end}}" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Add movement</button>
 </div>{{end}}
 
 {{define "sidebar"}}<aside class="side" id="side" aria-label="Months">{{template "sidebar-items" .}}</aside>{{end}}
@@ -44,9 +44,6 @@
 {{range .Months}}<a class="item{{if .Selected}} sel{{end}}" href="/months/{{.Key}}" hx-get="/months/{{.Key}}" hx-target="#main" hx-push-url="true"><span class="ic">◷</span><span class="nm">{{.Name}}</span>{{if .Latest}}<span class="badge">{{.Badge}}</span>{{else}}<span class="amt-s">{{.Amount}}</span>{{end}}</a>
 {{else}}<div class="sec-t" style="text-transform:none;letter-spacing:0">No months yet</div>{{end}}
 </div>{{end}}
-
-{{define "toast"}}<div class="toast" role="status"><span>{{.Message}}</span>{{if .UndoID}}<button hx-post="/movements/{{.UndoID}}/restore">Undo</button>{{end}}</div>{{end}}
-{{define "toast-oob"}}<div id="toast-area" hx-swap-oob="innerHTML">{{template "toast" .}}</div>{{end}}
 
 {{define "login"}}<!doctype html>
 <html lang="en">

@@ -7,7 +7,7 @@ import (
 	"github.com/drew138/abacus/internal/domain"
 )
 
-type movementRow struct {
+type findMovementRow struct {
 	ID          int64
 	Ref         sql.NullString
 	OccurredOn  string
@@ -22,7 +22,7 @@ type movementRow struct {
 	DeletedAt   sql.NullString
 }
 
-func (r movementRow) toDomain() domain.Movement {
+func (r findMovementRow) toDomain() domain.Movement {
 	date, _ := time.Parse(dateLayout, r.OccurredOn)
 	return domain.Movement{
 		ID:       r.ID,
@@ -39,21 +39,8 @@ func (r movementRow) toDomain() domain.Movement {
 	}
 }
 
-type categoryRow struct {
-	Name   string
-	Parent sql.NullString
-}
-
-func (r categoryRow) toDomain() domain.Category {
-	return domain.Category{Name: r.Name, Parent: r.Parent.String}
-}
-
-type userRow struct {
-	ID           int64
-	Username     string
-	PasswordHash string
-}
-
-func (r userRow) toDomain() domain.User {
-	return domain.User{ID: r.ID, Username: r.Username, PasswordHash: r.PasswordHash}
+func scanFindMovement(scan func(...any) error) (findMovementRow, error) {
+	var r findMovementRow
+	err := scan(&r.ID, &r.Ref, &r.OccurredOn, &r.Merchant, &r.MerchantKey, &r.Amount, &r.Category, &r.Method, &r.Note, &r.Source, &r.Edited, &r.DeletedAt)
+	return r, err
 }

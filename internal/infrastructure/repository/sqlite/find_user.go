@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Repository) FindUser(ctx context.Context, id int64) (domain.User, error) {
-	var row userRow
+	var row findUserRow
 	err := r.db.QueryRowContext(ctx, "SELECT id, username, password_hash FROM users WHERE id = ?", id).
 		Scan(&row.ID, &row.Username, &row.PasswordHash)
 	if err != nil {

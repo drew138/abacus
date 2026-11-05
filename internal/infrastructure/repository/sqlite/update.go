@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Repository) Update(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
-	row := mapMovementRow(movement)
+	row := mapUpdateMovementRow(movement)
 	res, err := r.db.ExecContext(ctx,
 		`UPDATE movements SET occurred_on = ?, merchant = ?, merchant_key = ?, amount = ?, category = ?, method = ?, note = ?, edited = ?, updated_at = ?
 		 WHERE id = ?`,

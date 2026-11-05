@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Repository) Create(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
-	row := mapMovementRow(movement)
+	row := mapCreateMovementRow(movement)
 	at := now()
 	err := r.db.QueryRowContext(ctx,
 		`INSERT INTO movements (ref, occurred_on, merchant, merchant_key, amount, category, method, note, source, edited, created_at, updated_at)

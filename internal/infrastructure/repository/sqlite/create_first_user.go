@@ -16,7 +16,7 @@ func (r *Repository) CreateFirstUser(ctx context.Context, username, plain string
 		return domain.User{}, fmt.Errorf("hashing the password: %w: %w", domain.ErrInternal, err)
 	}
 
-	var row userRow
+	var row createFirstUserRow
 	err = r.db.QueryRowContext(ctx,
 		`INSERT INTO users (username, password_hash, created_at)
 		 SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM users)

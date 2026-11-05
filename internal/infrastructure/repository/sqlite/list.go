@@ -15,7 +15,7 @@ func (r *Repository) List(ctx context.Context) ([]domain.Category, error) {
 
 	categories := []domain.Category{}
 	for rows.Next() {
-		var row categoryRow
+		var row listCategoryRow
 		if err := rows.Scan(&row.Name, &row.Parent); err != nil {
 			return nil, domainError(err, "reading a category")
 		}

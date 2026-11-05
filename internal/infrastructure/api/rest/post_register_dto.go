@@ -5,3 +5,8 @@ type RegisterForm struct {
 	Password string `form:"password" validate:"required,min=12,max=72"`
 	Confirm  string `form:"confirm" validate:"eqfield=Password"`
 }
+
+type postRegisterView struct {
+	Error    string
+	Username string
+}

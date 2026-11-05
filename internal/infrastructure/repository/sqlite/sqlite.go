@@ -39,12 +39,6 @@ func now() string {
 
 const movementColumns = "id, ref, occurred_on, merchant, merchant_key, amount, category, method, note, source, edited, deleted_at"
 
-func scanMovement(scan func(...any) error) (movementRow, error) {
-	var r movementRow
-	err := scan(&r.ID, &r.Ref, &r.OccurredOn, &r.Merchant, &r.MerchantKey, &r.Amount, &r.Category, &r.Method, &r.Note, &r.Source, &r.Edited, &r.DeletedAt)
-	return r, err
-}
-
 func domainError(err error, doing string) error {
 	var sqliteErr *driver.Error
 	switch {

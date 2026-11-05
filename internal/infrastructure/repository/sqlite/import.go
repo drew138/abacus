@@ -23,7 +23,7 @@ func (r *Repository) Import(ctx context.Context, movements []domain.Movement) (a
 
 	at := now()
 	for _, m := range movements {
-		row := mapMovementRow(m)
+		row := mapImportMovementRow(m)
 		if rule, ok := rules[row.MerchantKey]; ok && row.Category != domain.CategorySavings {
 			row.Category = rule
 		}

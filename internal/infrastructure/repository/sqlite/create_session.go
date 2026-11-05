@@ -10,7 +10,7 @@ import (
 )
 
 func (r *Repository) CreateSession(ctx context.Context, userID int64, lifetime time.Duration) (string, time.Time, error) {
-	raw, err := token.New()
+	raw, err := token.Create()
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("creating a session token: %w: %w", domain.ErrInternal, err)
 	}

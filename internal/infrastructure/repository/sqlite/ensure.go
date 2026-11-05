@@ -15,7 +15,7 @@ func (r *Repository) Ensure(ctx context.Context, categories []domain.Category) e
 
 	at := now()
 	for _, c := range categories {
-		row := mapCategoryRow(c)
+		row := mapEnsureCategoryRow(c)
 		if _, err := tx.ExecContext(ctx,
 			"INSERT INTO categories (name, parent, created_at) VALUES (?, ?, ?) ON CONFLICT (name) DO NOTHING",
 			row.Name, row.Parent, at); err != nil {
