@@ -41,7 +41,7 @@ func TestApplication_RestoreMovement(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			err := m.app(0).RestoreMovement(t.Context(), tt.id)
+			err := m.app().RestoreMovement(t.Context(), tt.id)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

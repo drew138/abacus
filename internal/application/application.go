@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/drew138/abacus/internal/domain"
-	"github.com/drew138/abacus/pkg/password"
-	"github.com/drew138/abacus/pkg/token"
 )
 
 type Repository interface {
@@ -24,28 +22,16 @@ type Repository interface {
 	FindByUsername(ctx context.Context, username string) (domain.User, error)
 	FindUser(ctx context.Context, id int64) (domain.User, error)
 	HasUsers(ctx context.Context) (bool, error)
-	CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error)
-	CreateSession(ctx context.Context, tokenHash string, userID int64, expiresAt time.Time) error
-	FindSession(ctx context.Context, tokenHash string) (userID int64, expiresAt time.Time, err error)
-	DeleteSession(ctx context.Context, tokenHash string) error
+	CreateFirstUser(ctx context.Context, username, password string) (domain.User, error)
+	CreateSession(ctx context.Context, userID int64, lifetime time.Duration) (token string, expiresAt time.Time, err error)
+	FindSession(ctx context.Context, token string) (userID int64, err error)
+	DeleteSession(ctx context.Context, token string) error
 }
 
 type Application struct {
-	repo            Repository
-	sessionTTL      time.Duration
-	now             func() time.Time
-	newToken        func() (string, error)
-	hashPassword    func(plain string) (string, error)
-	passwordMatches func(hash, plain string) (bool, error)
+	repo Repository
 }
 
-func New(repo Repository, sessionTTL time.Duration) *Application {
-	return &Application{
-		repo:            repo,
-		sessionTTL:      sessionTTL,
-		now:             time.Now,
-		newToken:        token.New,
-		hashPassword:    password.Hash,
-		passwordMatches: password.Matches,
-	}
+func New(repo Repository) *Application {
+	return &Application{repo: repo}
 }

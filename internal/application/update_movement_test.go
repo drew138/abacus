@@ -117,7 +117,7 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).UpdateMovement(t.Context(), tt.movement, tt.applyToMerchant)
+			got, err := m.app().UpdateMovement(t.Context(), tt.movement, tt.applyToMerchant)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

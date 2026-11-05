@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/drew138/abacus/internal/domain"
-	"github.com/drew138/abacus/pkg/token"
 )
 
 func TestApplication_LogOut(t *testing.T) {
@@ -22,7 +21,7 @@ func TestApplication_LogOut(t *testing.T) {
 			name: "deletes the session",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.repo.On("DeleteSession", anyCtx, token.Hash("raw")).Return(nil)
+				m.repo.On("DeleteSession", anyCtx, "raw").Return(nil)
 			},
 		},
 		{
@@ -34,7 +33,7 @@ func TestApplication_LogOut(t *testing.T) {
 			name: "returns the error when the store fails",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.repo.On("DeleteSession", anyCtx, token.Hash("raw")).Return(errStore)
+				m.repo.On("DeleteSession", anyCtx, "raw").Return(errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -47,7 +46,7 @@ func TestApplication_LogOut(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			err := m.app(0).LogOut(t.Context(), tt.raw)
+			err := m.app().LogOut(t.Context(), tt.raw)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

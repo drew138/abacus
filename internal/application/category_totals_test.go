@@ -41,7 +41,7 @@ func TestApplication_CategoryTotals(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).CategoryTotals(t.Context())
+			got, err := m.app().CategoryTotals(t.Context())
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

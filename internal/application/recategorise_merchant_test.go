@@ -77,7 +77,7 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).RecategoriseMerchant(t.Context(), tt.merchant, tt.category)
+			got, err := m.app().RecategoriseMerchant(t.Context(), tt.merchant, tt.category)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

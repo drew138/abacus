@@ -64,7 +64,7 @@ func TestApplication_ImportMovements(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			added, updated, kept, err := m.app(0).ImportMovements(t.Context(), tt.movements, categories)
+			added, updated, kept, err := m.app().ImportMovements(t.Context(), tt.movements, categories)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

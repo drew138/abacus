@@ -6,23 +6,19 @@ import (
 	"fmt"
 
 	"github.com/drew138/abacus/internal/domain"
-	"github.com/drew138/abacus/pkg/token"
 )
 
-func (a *Application) Authenticate(ctx context.Context, raw string) (domain.User, error) {
-	if raw == "" {
+func (a *Application) Authenticate(ctx context.Context, token string) (domain.User, error) {
+	if token == "" {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
-	userID, expiresAt, err := a.repo.FindSession(ctx, token.Hash(raw))
+	userID, err := a.repo.FindSession(ctx, token)
 	if errors.Is(err, domain.ErrNotFound) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 	if err != nil {
 		return domain.User{}, fmt.Errorf("finding session: %w", err)
-	}
-	if !a.now().Before(expiresAt) {
-		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
 	user, err := a.repo.FindUser(ctx, userID)

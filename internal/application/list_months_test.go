@@ -41,7 +41,7 @@ func TestApplication_ListMonths(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).ListMonths(t.Context())
+			got, err := m.app().ListMonths(t.Context())
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

@@ -19,12 +19,7 @@ func (a *Application) Register(ctx context.Context, username, plain string) (dom
 		return domain.User{}, err
 	}
 
-	hash, err := a.hashPassword(plain)
-	if err != nil {
-		return domain.User{}, fmt.Errorf("hashing password: %w: %w", domain.ErrInternal, err)
-	}
-
-	user, err := a.repo.CreateFirstUser(ctx, username, hash)
+	user, err := a.repo.CreateFirstUser(ctx, username, plain)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("creating the first user: %w", err)
 	}

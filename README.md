@@ -32,7 +32,6 @@ The image holds one binary, `/abacus`, which serves the web app and the import A
 | `DATABASE_PATH` | `/data/abacus.db` | SQLite file |
 | `HTTP_ADDR` | `:8080` | listen address |
 | `SECURE_COOKIE` | `true` | set `false` only for plain-HTTP local runs |
-| `SESSION_TTL` | `720h` | how long a sign-in lasts |
 
 ## Layout
 

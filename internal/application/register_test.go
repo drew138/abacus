@@ -24,8 +24,7 @@ func TestApplication_Register(t *testing.T) {
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
 				m.repo.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", "correct horse battery").Return("hash", nil)
-				m.repo.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{ID: 1, Username: "andres", PasswordHash: "hash"}, nil)
+				m.repo.On("CreateFirstUser", anyCtx, "andres", "correct horse battery").Return(domain.User{ID: 1, Username: "andres", PasswordHash: "hash"}, nil)
 			},
 			want: domain.User{ID: 1, Username: "andres"},
 		},
@@ -50,8 +49,7 @@ func TestApplication_Register(t *testing.T) {
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
 				m.repo.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", "correct horse battery").Return("hash", nil)
-				m.repo.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{}, domain.ErrRegistrationClosed)
+				m.repo.On("CreateFirstUser", anyCtx, "andres", "correct horse battery").Return(domain.User{}, domain.ErrRegistrationClosed)
 			},
 			wantErr: domain.ErrRegistrationClosed,
 		},
@@ -64,13 +62,13 @@ func TestApplication_Register(t *testing.T) {
 			wantErr: domain.ErrUnavailable,
 		},
 		{
-			name:     "returns the error when hashing fails",
+			name:     "returns the error when the user cannot be saved",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
 				m.repo.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", "correct horse battery").Return("", domain.ErrInternal)
+				m.repo.On("CreateFirstUser", anyCtx, "andres", "correct horse battery").Return(domain.User{}, errStore)
 			},
-			wantErr: domain.ErrInternal,
+			wantErr: domain.ErrUnavailable,
 		},
 	}
 
@@ -81,7 +79,7 @@ func TestApplication_Register(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).Register(t.Context(), "andres", tt.password)
+			got, err := m.app().Register(t.Context(), "andres", tt.password)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

@@ -41,7 +41,7 @@ func TestApplication_ListCategories(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).ListCategories(t.Context())
+			got, err := m.app().ListCategories(t.Context())
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

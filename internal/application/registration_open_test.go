@@ -48,7 +48,7 @@ func TestApplication_RegistrationOpen(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).RegistrationOpen(t.Context())
+			got, err := m.app().RegistrationOpen(t.Context())
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

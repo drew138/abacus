@@ -95,106 +95,37 @@ func (m *MockRepository) HasUsers(ctx context.Context) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockRepository) CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error) {
-	args := m.Called(ctx, username, passwordHash)
+func (m *MockRepository) CreateFirstUser(ctx context.Context, username, password string) (domain.User, error) {
+	args := m.Called(ctx, username, password)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockRepository) CreateSession(ctx context.Context, tokenHash string, userID int64, expiresAt time.Time) error {
-	args := m.Called(ctx, tokenHash, userID, expiresAt)
+func (m *MockRepository) CreateSession(ctx context.Context, userID int64, lifetime time.Duration) (string, time.Time, error) {
+	args := m.Called(ctx, userID, lifetime)
+	return args.String(0), args.Get(1).(time.Time), args.Error(2)
+}
+
+func (m *MockRepository) FindSession(ctx context.Context, token string) (int64, error) {
+	args := m.Called(ctx, token)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockRepository) DeleteSession(ctx context.Context, token string) error {
+	args := m.Called(ctx, token)
 	return args.Error(0)
-}
-
-func (m *MockRepository) FindSession(ctx context.Context, tokenHash string) (int64, time.Time, error) {
-	args := m.Called(ctx, tokenHash)
-	return args.Get(0).(int64), args.Get(1).(time.Time), args.Error(2)
-}
-
-func (m *MockRepository) DeleteSession(ctx context.Context, tokenHash string) error {
-	args := m.Called(ctx, tokenHash)
-	return args.Error(0)
-}
-
-type MockPasswords struct {
-	mock.Mock
-}
-
-func newMockPasswords(t *testing.T) *MockPasswords {
-	t.Helper()
-	m := &MockPasswords{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockPasswords) Hash(plain string) (string, error) {
-	args := m.Called(plain)
-	return args.String(0), args.Error(1)
-}
-
-func (m *MockPasswords) Matches(hash, plain string) (bool, error) {
-	args := m.Called(hash, plain)
-	return args.Bool(0), args.Error(1)
-}
-
-type MockTokens struct {
-	mock.Mock
-}
-
-func newMockTokens(t *testing.T) *MockTokens {
-	t.Helper()
-	m := &MockTokens{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockTokens) New() (string, error) {
-	args := m.Called()
-	return args.String(0), args.Error(1)
-}
-
-type MockClock struct {
-	mock.Mock
-}
-
-func newMockClock(t *testing.T) *MockClock {
-	t.Helper()
-	m := &MockClock{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockClock) Now() time.Time {
-	args := m.Called()
-	return args.Get(0).(time.Time)
 }
 
 type mocks struct {
-	repo      *MockRepository
-	passwords *MockPasswords
-	tokens    *MockTokens
-	clock     *MockClock
+	repo *MockRepository
 }
 
 func newMocks(t *testing.T) mocks {
 	t.Helper()
-	return mocks{
-		repo:      newMockRepository(t),
-		passwords: newMockPasswords(t),
-		tokens:    newMockTokens(t),
-		clock:     newMockClock(t),
-	}
+	return mocks{repo: newMockRepository(t)}
 }
 
-func (m mocks) app(sessionTTL time.Duration) *Application {
-	a := New(m.repo, sessionTTL)
-	a.now = m.clock.Now
-	a.newToken = m.tokens.New
-	a.hashPassword = m.passwords.Hash
-	a.passwordMatches = m.passwords.Matches
-	return a
+func (m mocks) app() *Application {
+	return New(m.repo)
 }
 
 func day(y int, mo time.Month, d int) time.Time {

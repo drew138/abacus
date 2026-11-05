@@ -8,81 +8,72 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/drew138/abacus/internal/domain"
-	"github.com/drew138/abacus/pkg/token"
+	"github.com/drew138/abacus/pkg/password"
 )
 
 func TestApplication_LogIn(t *testing.T) {
 	t.Parallel()
 
-	now := time.Date(2026, 11, 4, 20, 0, 0, 0, time.UTC)
-	ttl := 30 * 24 * time.Hour
-	user := domain.User{ID: 1, Username: "andres", PasswordHash: "hash"}
+	hash, err := password.Hash("secret password")
+	require.NoError(t, err)
+	user := domain.User{ID: 1, Username: "andres", PasswordHash: hash}
+	expires := time.Date(2026, 12, 4, 20, 0, 0, 0, time.UTC)
 	tests := []struct {
 		name        string
+		password    string
 		setupMocks  func(mocks)
 		wantToken   string
 		wantExpires time.Time
 		wantErr     error
 	}{
 		{
-			name: "creates a session that expires after the ttl",
+			name:     "opens a thirty-day session",
+			password: "secret password",
 			setupMocks: func(m mocks) {
 				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
-				m.tokens.On("New").Return("raw-token", nil)
-				m.clock.On("Now").Return(now)
-				m.repo.On("CreateSession", anyCtx, token.Hash("raw-token"), int64(1), now.Add(ttl)).Return(nil)
+				m.repo.On("CreateSession", anyCtx, int64(1), 30*24*time.Hour).Return("raw-token", expires, nil)
 			},
 			wantToken:   "raw-token",
-			wantExpires: now.Add(ttl),
+			wantExpires: expires,
 		},
 		{
-			name: "rejects an unknown user with the same error as a wrong password",
+			name:     "rejects an unknown user with the same error as a wrong password",
+			password: "secret password",
 			setupMocks: func(m mocks) {
 				m.repo.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrInvalidCredentials,
 		},
 		{
-			name: "rejects a wrong password",
+			name:     "rejects a wrong password",
+			password: "wrong password",
 			setupMocks: func(m mocks) {
 				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", "hash", "secret password").Return(false, nil)
 			},
 			wantErr: domain.ErrInvalidCredentials,
 		},
 		{
-			name: "returns the error when the user cannot be loaded",
+			name:     "returns an internal error for a corrupt hash",
+			password: "secret password",
+			setupMocks: func(m mocks) {
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(domain.User{ID: 1, PasswordHash: "not a hash"}, nil)
+			},
+			wantErr: domain.ErrInternal,
+		},
+		{
+			name:     "returns the error when the user cannot be loaded",
+			password: "secret password",
 			setupMocks: func(m mocks) {
 				m.repo.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
 		{
-			name: "returns the error when the password cannot be checked",
+			name:     "returns the error when the session cannot be created",
+			password: "secret password",
 			setupMocks: func(m mocks) {
 				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", "hash", "secret password").Return(false, domain.ErrInternal)
-			},
-			wantErr: domain.ErrInternal,
-		},
-		{
-			name: "returns the error when no token can be made",
-			setupMocks: func(m mocks) {
-				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
-				m.tokens.On("New").Return("", domain.ErrInternal)
-			},
-			wantErr: domain.ErrInternal,
-		},
-		{
-			name: "returns the error when the session cannot be saved",
-			setupMocks: func(m mocks) {
-				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
-				m.tokens.On("New").Return("raw-token", nil)
-				m.clock.On("Now").Return(now)
-				m.repo.On("CreateSession", anyCtx, token.Hash("raw-token"), int64(1), now.Add(ttl)).Return(errStore)
+				m.repo.On("CreateSession", anyCtx, int64(1), 30*24*time.Hour).Return("", time.Time{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -95,7 +86,7 @@ func TestApplication_LogIn(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			gotToken, gotExpires, err := m.app(ttl).LogIn(t.Context(), "andres", "secret password")
+			gotToken, gotExpires, err := m.app().LogIn(t.Context(), "andres", tt.password)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

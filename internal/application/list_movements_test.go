@@ -41,7 +41,7 @@ func TestApplication_ListMovements(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).ListMovements(t.Context(), "2026-10")
+			got, err := m.app().ListMovements(t.Context(), "2026-10")
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

@@ -41,7 +41,7 @@ func TestApplication_GetMovement(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).GetMovement(t.Context(), 3)
+			got, err := m.app().GetMovement(t.Context(), 3)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

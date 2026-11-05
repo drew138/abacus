@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"time"
 )
 
 type config struct {
@@ -12,7 +11,6 @@ type config struct {
 	databasePath string
 	importToken  string
 	secureCookie bool
-	sessionTTL   time.Duration
 }
 
 func loadConfig() (config, error) {
@@ -27,16 +25,11 @@ func loadConfig() (config, error) {
 	if err != nil {
 		return config{}, err
 	}
-	sessionTTL, err := duration("SESSION_TTL", 30*24*time.Hour)
-	if err != nil {
-		return config{}, err
-	}
 	return config{
 		httpAddr:     envOr("HTTP_ADDR", ":8080"),
 		databasePath: envOr("DATABASE_PATH", "/data/abacus.db"),
 		importToken:  importToken,
 		secureCookie: secureCookie,
-		sessionTTL:   sessionTTL,
 	}, nil
 }
 
@@ -65,16 +58,4 @@ func boolean(key string, fallback bool) (bool, error) {
 		return false, fmt.Errorf("%s must be true or false", key)
 	}
 	return b, nil
-}
-
-func duration(key string, fallback time.Duration) (time.Duration, error) {
-	v := os.Getenv(key)
-	if v == "" {
-		return fallback, nil
-	}
-	d, err := time.ParseDuration(v)
-	if err != nil || d <= 0 {
-		return 0, fmt.Errorf("%s must be a positive duration such as 720h", key)
-	}
-	return d, nil
 }

@@ -46,7 +46,7 @@ func run() error {
 		return fmt.Errorf("reaching database: %w", err)
 	}
 
-	app := application.New(sqlite.New(db), cfg.sessionTTL)
+	app := application.New(sqlite.New(db))
 	router := chi.NewRouter()
 	rest.New(router, app, cfg.importToken)
 	if _, err := htmx.New(router, app, cfg.secureCookie); err != nil {
