@@ -1,4 +1,4 @@
-package htmx
+package rest
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (h *Handler) confirmDelete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getRow(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil || id <= 0 {
 		h.writeError(w, r, errInvalidID)
@@ -18,5 +18,5 @@ func (h *Handler) confirmDelete(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	h.render(w, r, http.StatusOK, "row", mapRowView(movement, true))
+	h.render(w, r, http.StatusOK, "row", mapRowView(movement, false))
 }

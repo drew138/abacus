@@ -1,4 +1,4 @@
-<p align="center"><img src="internal/infrastructure/api/htmx/web/static/logo.svg" alt="Abacus logo" width="96" height="96"></p>
+<p align="center"><img src="internal/infrastructure/api/rest/web/static/logo.svg" alt="Abacus logo" width="96" height="96"></p>
 
 <h1 align="center">Abacus</h1>
 
@@ -39,8 +39,9 @@ Ports and adapters:
 
 - `internal/domain`: models and rules, such as the Savings → Food → … → Other order.
 - `internal/application`: the use cases. Their one dependency is the `Repository` port.
-- `internal/infrastructure`: `api/htmx` (the web app), `api/rest` (the import endpoint) and
-  `repository/sqlite` (the only outbound adapter).
+- `internal/infrastructure`: `api/rest`, every HTTP route (the web app's pages, with their
+  templates and static files in `web/`, and the JSON import), and `repository/sqlite`, the
+  only outbound adapter.
 - `pkg/`: in-process libraries the application calls directly: `password` (bcrypt) and
   `token` (session tokens).
 

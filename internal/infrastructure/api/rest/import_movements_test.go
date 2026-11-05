@@ -139,7 +139,8 @@ func TestHandler_importMovements(t *testing.T) {
 			app := newMockApplication(t)
 			tt.setupMocks(app)
 			router := chi.NewRouter()
-			New(router, app, testToken)
+			_, err := New(router, app, testToken, true)
+			require.NoError(t, err)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/import", strings.NewReader(tt.body))
 			if tt.auth != "" {

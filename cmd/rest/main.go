@@ -15,7 +15,6 @@ import (
 	_ "modernc.org/sqlite"
 
 	"github.com/drew138/abacus/internal/application"
-	"github.com/drew138/abacus/internal/infrastructure/api/htmx"
 	"github.com/drew138/abacus/internal/infrastructure/api/rest"
 	"github.com/drew138/abacus/internal/infrastructure/repository/sqlite"
 )
@@ -48,8 +47,7 @@ func run() error {
 
 	app := application.New(sqlite.New(db))
 	router := chi.NewRouter()
-	rest.New(router, app, cfg.importToken)
-	if _, err := htmx.New(router, app, cfg.secureCookie); err != nil {
+	if _, err := rest.New(router, app, cfg.importToken, cfg.secureCookie); err != nil {
 		return fmt.Errorf("building web interface: %w", err)
 	}
 	server := &http.Server{Addr: cfg.httpAddr, Handler: router}
