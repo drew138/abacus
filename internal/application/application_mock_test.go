@@ -119,7 +119,12 @@ func (m *MockUsers) FindUser(ctx context.Context, id int64) (domain.User, error)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockUsers) SavePassword(ctx context.Context, username, passwordHash string) (domain.User, error) {
+func (m *MockUsers) HasUsers(ctx context.Context) (bool, error) {
+	args := m.Called(ctx)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockUsers) CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error) {
 	args := m.Called(ctx, username, passwordHash)
 	return args.Get(0).(domain.User), args.Error(1)
 }
@@ -148,11 +153,6 @@ func (m *MockSessions) FindSession(ctx context.Context, tokenHash string) (domai
 
 func (m *MockSessions) DeleteSession(ctx context.Context, tokenHash string) error {
 	args := m.Called(ctx, tokenHash)
-	return args.Error(0)
-}
-
-func (m *MockSessions) DeleteSessionsForUser(ctx context.Context, userID int64) error {
-	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 

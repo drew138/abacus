@@ -28,14 +28,14 @@ type Categories interface {
 type Users interface {
 	FindByUsername(ctx context.Context, username string) (domain.User, error)
 	FindUser(ctx context.Context, id int64) (domain.User, error)
-	SavePassword(ctx context.Context, username, passwordHash string) (domain.User, error)
+	HasUsers(ctx context.Context) (bool, error)
+	CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error)
 }
 
 type Sessions interface {
 	CreateSession(ctx context.Context, session domain.Session) error
 	FindSession(ctx context.Context, tokenHash string) (domain.Session, error)
 	DeleteSession(ctx context.Context, tokenHash string) error
-	DeleteSessionsForUser(ctx context.Context, userID int64) error
 }
 
 type Passwords interface {

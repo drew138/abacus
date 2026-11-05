@@ -18,4 +18,5 @@ var (
 	ErrInvalidCredentials = fmt.Errorf("invalid credentials: %w", ErrInvalid)
 	ErrNotAuthenticated   = fmt.Errorf("not authenticated: %w", ErrInvalid)
 	ErrPasswordTooShort   = fmt.Errorf("password too short: %w", ErrInvalid)
+	ErrRegistrationClosed = fmt.Errorf("registration closed: %w", ErrConflict)
 )

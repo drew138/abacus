@@ -332,15 +332,26 @@ func (r *Repository) FindUser(ctx context.Context, id int64) (domain.User, error
 	return user, nil
 }
 
-func (r *Repository) SavePassword(ctx context.Context, username, passwordHash string) (domain.User, error) {
+func (r *Repository) HasUsers(ctx context.Context) (bool, error) {
+	var exists bool
+	if err := r.db.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM users)").Scan(&exists); err != nil {
+		return false, domainError(err, "checking for users")
+	}
+	return exists, nil
+}
+
+func (r *Repository) CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error) {
 	var row userRow
 	err := r.db.QueryRowContext(ctx,
-		`INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)
-		 ON CONFLICT (username) DO UPDATE SET password_hash = excluded.password_hash
+		`INSERT INTO users (username, password_hash, created_at)
+		 SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM users)
 		 RETURNING id, username`,
 		username, passwordHash, now()).Scan(&row.ID, &row.Username)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.User{}, domain.ErrRegistrationClosed
+	}
 	if err != nil {
-		return domain.User{}, domainError(err, "saving a password")
+		return domain.User{}, domainError(err, "creating the first user")
 	}
 	return row.toDomain(), nil
 }
@@ -367,13 +378,6 @@ func (r *Repository) FindSession(ctx context.Context, tokenHash string) (domain.
 func (r *Repository) DeleteSession(ctx context.Context, tokenHash string) error {
 	if _, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE token_hash = ?", tokenHash); err != nil {
 		return domainError(err, "deleting a session")
-	}
-	return nil
-}
-
-func (r *Repository) DeleteSessionsForUser(ctx context.Context, userID int64) error {
-	if _, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE user_id = ?", userID); err != nil {
-		return domainError(err, fmt.Sprintf("deleting the sessions of user %d", userID))
 	}
 	return nil
 }

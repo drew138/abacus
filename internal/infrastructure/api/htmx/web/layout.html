@@ -65,3 +65,22 @@
 </form>
 </body>
 </html>{{end}}
+
+{{define "register"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head"}}
+<title>Create your account · Abacus</title>
+</head>
+<body class="login-page">
+<form class="lcard" method="post" action="/register">
+  <div class="lhead"><img src="/logo.svg" alt="" width="56" height="56"><b>Abacus</b><p>Create your account. This page closes once it exists.</p></div>
+  {{with .Error}}<div class="err-box" role="alert">{{.}}</div>{{end}}
+  <div class="fld"><label for="u">Username</label><input id="u" name="username" autocomplete="username" required maxlength="60" autofocus value="{{.Username}}"></div>
+  <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="72"><span class="hint">At least 12 characters.</span></div>
+  <div class="fld"><label for="c">Repeat the password</label><input id="c" name="confirm" type="password" autocomplete="new-password" required minlength="12" maxlength="72"></div>
+  <button class="btn primary lgo" type="submit">Create account</button>
+  <div class="lfoot">Only reachable over Tailscale</div>
+</form>
+</body>
+</html>{{end}}

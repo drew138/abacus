@@ -5,10 +5,8 @@ go 1.27
 require (
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/go-playground/validator/v10 v10.30.6
-	github.com/golang-migrate/migrate/v4 v4.20.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.58.0
-	golang.org/x/term v0.47.0
 	modernc.org/sqlite v1.61.1
 )
 

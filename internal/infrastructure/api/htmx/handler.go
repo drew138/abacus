@@ -58,6 +58,8 @@ type Application interface {
 	RecategoriseMerchant(ctx context.Context, merchant, category string) (int, error)
 	DeleteMovement(ctx context.Context, id int64) error
 	RestoreMovement(ctx context.Context, id int64) error
+	Register(ctx context.Context, username, password string) (domain.User, error)
+	RegistrationOpen(ctx context.Context) (bool, error)
 	LogIn(ctx context.Context, username, password string) (string, domain.Session, error)
 	Authenticate(ctx context.Context, token string) (domain.User, error)
 	LogOut(ctx context.Context, token string) error
@@ -92,6 +94,8 @@ func New(router chi.Router, app Application, secureCookie bool) (*Handler, error
 	router.Get("/logo.svg", h.logged(h.getLogo))
 	router.Get("/login", h.logged(h.getLogin))
 	router.Post("/login", h.logged(h.sameOrigin(h.postLogin)))
+	router.Get("/register", h.logged(h.getRegister))
+	router.Post("/register", h.logged(h.sameOrigin(h.postRegister)))
 	router.Post("/logout", h.logged(h.sameOrigin(h.postLogout)))
 
 	router.Get("/", h.logged(h.authed(h.getIndex)))

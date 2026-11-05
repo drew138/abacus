@@ -12,13 +12,15 @@ n8n reads the Nu statements from Paperless, categorises them and posts each mont
 nothing. Movements you edit or delete in the app keep your version on later imports, and
 merchant rules you set in the app apply to future imports.
 
-## Entry points
+## Running it
 
-| Binary | Does |
-|---|---|
-| `/rest` | serves the web app and the import API |
-| `/migrate` | applies the migrations in `migration/`; run it before `/rest` on every deploy |
-| `/cli set-password <username>` | creates the user or changes the password, and signs out every session |
+The image holds one binary, `/abacus`, which serves the web app and the import API.
+
+- **Migrations** live in `migration/` (golang-migrate format) and are applied outside the app,
+  before it starts: `migrate -path migration -database sqlite:///data/abacus.db up`, with a
+  `migrate` built with `-tags sqlite`. The homelab deploy does this in its own container.
+- **Your account:** the first visit opens **Create account**. Once an account exists the page
+  closes for good, so nobody else can register.
 
 ## Configuration
 
