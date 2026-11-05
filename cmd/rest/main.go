@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,11 +11,11 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
-	_ "modernc.org/sqlite"
+	"github.com/rqlite/gorqlite"
 
 	"github.com/drew138/abacus/internal/application"
 	"github.com/drew138/abacus/internal/infrastructure/api/rest"
-	"github.com/drew138/abacus/internal/infrastructure/repository/sqlite"
+	"github.com/drew138/abacus/internal/infrastructure/repository/rqlite"
 )
 
 func main() {
@@ -36,16 +35,16 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	db, err := sql.Open("sqlite", "file:"+cfg.databasePath+"?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_txlock=immediate")
+	conn, err := gorqlite.Open(cfg.databaseURL)
 	if err != nil {
-		return fmt.Errorf("opening database: %w", err)
-	}
-	defer db.Close()
-	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("reaching database: %w", err)
 	}
+	defer conn.Close()
+	if err := conn.SetExecutionWithTransaction(true); err != nil {
+		return fmt.Errorf("configuring database: %w", err)
+	}
 
-	app := application.New(sqlite.New(db))
+	app := application.New(rqlite.New(conn))
 	router := chi.NewRouter()
 	if _, err := rest.New(router, app, cfg.importToken, cfg.secureCookie); err != nil {
 		return fmt.Errorf("building web interface: %w", err)

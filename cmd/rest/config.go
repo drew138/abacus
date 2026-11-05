@@ -8,12 +8,16 @@ import (
 
 type config struct {
 	httpAddr     string
-	databasePath string
+	databaseURL  string
 	importToken  string
 	secureCookie bool
 }
 
 func loadConfig() (config, error) {
+	databaseURL, err := required("DATABASE_URL")
+	if err != nil {
+		return config{}, err
+	}
 	importToken, err := required("IMPORT_TOKEN")
 	if err != nil {
 		return config{}, err
@@ -27,7 +31,7 @@ func loadConfig() (config, error) {
 	}
 	return config{
 		httpAddr:     envOr("HTTP_ADDR", ":8080"),
-		databasePath: envOr("DATABASE_PATH", "/data/abacus.db"),
+		databaseURL:  databaseURL,
 		importToken:  importToken,
 		secureCookie: secureCookie,
 	}, nil
