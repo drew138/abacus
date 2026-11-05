@@ -14,23 +14,23 @@ func (a *Application) Authenticate(ctx context.Context, raw string) (domain.User
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
-	session, err := a.repo.FindSession(ctx, token.Hash(raw))
+	userID, expiresAt, err := a.repo.FindSession(ctx, token.Hash(raw))
 	if errors.Is(err, domain.ErrNotFound) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 	if err != nil {
 		return domain.User{}, fmt.Errorf("finding session: %w", err)
 	}
-	if session.Expired(a.now()) {
+	if !a.now().Before(expiresAt) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
-	user, err := a.repo.FindUser(ctx, session.UserID)
+	user, err := a.repo.FindUser(ctx, userID)
 	if errors.Is(err, domain.ErrNotFound) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 	if err != nil {
-		return domain.User{}, fmt.Errorf("finding user %d: %w", session.UserID, err)
+		return domain.User{}, fmt.Errorf("finding user %d: %w", userID, err)
 	}
 	return user, nil
 }

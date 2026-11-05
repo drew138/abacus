@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/drew138/abacus/internal/domain"
 )
@@ -13,7 +12,7 @@ func mapMovementRow(m domain.Movement) movementRow {
 		Ref:         sql.NullString{String: m.Ref, Valid: m.Ref != ""},
 		OccurredOn:  m.Date.Format(dateLayout),
 		Merchant:    m.Merchant,
-		MerchantKey: m.MerchantKey(),
+		MerchantKey: merchantKey(m.Merchant),
 		Amount:      m.Amount,
 		Category:    m.Category,
 		Method:      string(m.Method),
@@ -25,8 +24,4 @@ func mapMovementRow(m domain.Movement) movementRow {
 
 func mapCategoryRow(c domain.Category) categoryRow {
 	return categoryRow{Name: c.Name, Parent: sql.NullString{String: c.Parent, Valid: c.Parent != ""}}
-}
-
-func mapSessionRow(s domain.Session) sessionRow {
-	return sessionRow{TokenHash: s.TokenHash, UserID: s.UserID, ExpiresAt: s.ExpiresAt.UTC().Format(time.RFC3339)}
 }

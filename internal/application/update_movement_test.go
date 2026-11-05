@@ -12,7 +12,7 @@ import (
 func TestApplication_UpdateMovement(t *testing.T) {
 	t.Parallel()
 
-	categories := []domain.Category{{Name: "Groceries", Parent: domain.GroupFood}, {Name: "Food delivery", Parent: domain.GroupFood}}
+	categories := []domain.Category{{Name: "Groceries", Parent: "Food and eating out"}, {Name: "Food delivery", Parent: "Food and eating out"}}
 	date := day(2026, 10, 3)
 	imported := domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 42900, Category: "Food delivery", Method: domain.MethodCredit, Source: domain.SourceStatement}
 	manual := domain.Movement{ID: 6, Date: date, Merchant: "Empanadas", Amount: 12000, Category: "Groceries", Method: domain.MethodDebit, Source: domain.SourceManual}
@@ -55,7 +55,7 @@ func TestApplication_UpdateMovement(t *testing.T) {
 				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 42900, Category: "Groceries", Method: domain.MethodCredit, Source: domain.SourceStatement, Edited: true}
 				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
-				m.repo.On("Recategorise", anyCtx, "rappi", "Groceries").Return(4, nil)
+				m.repo.On("Recategorise", anyCtx, "Rappi", "Groceries").Return(4, nil)
 			},
 			want: domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 42900, Category: "Groceries", Method: domain.MethodCredit, Source: domain.SourceStatement, Edited: true},
 		},
@@ -104,7 +104,7 @@ func TestApplication_UpdateMovement(t *testing.T) {
 				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 6, Merchant: "Empanadas", Category: "Groceries", Source: domain.SourceManual}
 				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
-				m.repo.On("Recategorise", anyCtx, "empanadas", "Groceries").Return(0, errStore)
+				m.repo.On("Recategorise", anyCtx, "Empanadas", "Groceries").Return(0, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

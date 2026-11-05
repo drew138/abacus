@@ -25,9 +25,9 @@ func newMockRepository(t *testing.T) *MockRepository {
 	return m
 }
 
-func (m *MockRepository) Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error) {
+func (m *MockRepository) Import(ctx context.Context, movements []domain.Movement) (int, int, int, error) {
 	args := m.Called(ctx, movements)
-	return args.Get(0).(domain.ImportResult), args.Error(1)
+	return args.Int(0), args.Int(1), args.Int(2), args.Error(3)
 }
 
 func (m *MockRepository) Months(ctx context.Context) ([]domain.MonthSummary, error) {
@@ -40,9 +40,9 @@ func (m *MockRepository) ListByMonth(ctx context.Context, month string) ([]domai
 	return args.Get(0).([]domain.Movement), args.Error(1)
 }
 
-func (m *MockRepository) Totals(ctx context.Context) ([]domain.CategoryTotal, error) {
+func (m *MockRepository) Totals(ctx context.Context) (map[string]map[string]int64, error) {
 	args := m.Called(ctx)
-	return args.Get(0).([]domain.CategoryTotal), args.Error(1)
+	return args.Get(0).(map[string]map[string]int64), args.Error(1)
 }
 
 func (m *MockRepository) Find(ctx context.Context, id int64) (domain.Movement, error) {
@@ -65,14 +65,9 @@ func (m *MockRepository) SetDeleted(ctx context.Context, id int64, deleted bool)
 	return args.Error(0)
 }
 
-func (m *MockRepository) Recategorise(ctx context.Context, merchantKey, category string) (int, error) {
-	args := m.Called(ctx, merchantKey, category)
+func (m *MockRepository) Recategorise(ctx context.Context, merchant, category string) (int, error) {
+	args := m.Called(ctx, merchant, category)
 	return args.Int(0), args.Error(1)
-}
-
-func (m *MockRepository) MerchantRules(ctx context.Context) (map[string]string, error) {
-	args := m.Called(ctx)
-	return args.Get(0).(map[string]string), args.Error(1)
 }
 
 func (m *MockRepository) List(ctx context.Context) ([]domain.Category, error) {
@@ -105,14 +100,14 @@ func (m *MockRepository) CreateFirstUser(ctx context.Context, username, password
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockRepository) CreateSession(ctx context.Context, session domain.Session) error {
-	args := m.Called(ctx, session)
+func (m *MockRepository) CreateSession(ctx context.Context, tokenHash string, userID int64, expiresAt time.Time) error {
+	args := m.Called(ctx, tokenHash, userID, expiresAt)
 	return args.Error(0)
 }
 
-func (m *MockRepository) FindSession(ctx context.Context, tokenHash string) (domain.Session, error) {
+func (m *MockRepository) FindSession(ctx context.Context, tokenHash string) (int64, time.Time, error) {
 	args := m.Called(ctx, tokenHash)
-	return args.Get(0).(domain.Session), args.Error(1)
+	return args.Get(0).(int64), args.Get(1).(time.Time), args.Error(2)
 }
 
 func (m *MockRepository) DeleteSession(ctx context.Context, tokenHash string) error {

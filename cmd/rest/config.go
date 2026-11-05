@@ -13,7 +13,6 @@ type config struct {
 	importToken  string
 	secureCookie bool
 	sessionTTL   time.Duration
-	maxBodyBytes int64
 }
 
 func loadConfig() (config, error) {
@@ -32,17 +31,12 @@ func loadConfig() (config, error) {
 	if err != nil {
 		return config{}, err
 	}
-	maxBodyBytes, err := positiveInt("MAX_BODY_BYTES", 2<<20)
-	if err != nil {
-		return config{}, err
-	}
 	return config{
 		httpAddr:     envOr("HTTP_ADDR", ":8080"),
 		databasePath: envOr("DATABASE_PATH", "/data/abacus.db"),
 		importToken:  importToken,
 		secureCookie: secureCookie,
 		sessionTTL:   sessionTTL,
-		maxBodyBytes: maxBodyBytes,
 	}, nil
 }
 
@@ -83,16 +77,4 @@ func duration(key string, fallback time.Duration) (time.Duration, error) {
 		return 0, fmt.Errorf("%s must be a positive duration such as 720h", key)
 	}
 	return d, nil
-}
-
-func positiveInt(key string, fallback int64) (int64, error) {
-	v := os.Getenv(key)
-	if v == "" {
-		return fallback, nil
-	}
-	n, err := strconv.ParseInt(v, 10, 64)
-	if err != nil || n <= 0 {
-		return 0, fmt.Errorf("%s must be a positive integer", key)
-	}
-	return n, nil
 }

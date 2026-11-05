@@ -7,31 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCategoryTier(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name   string
-		cat    string
-		parent string
-		want   int
-	}{
-		{name: "savings comes first", cat: CategorySavings, want: 0},
-		{name: "the food group comes second", cat: GroupFood, want: 1},
-		{name: "a food subcategory comes second", cat: "Groceries", parent: GroupFood, want: 1},
-		{name: "other comes last", cat: CategoryOther, want: 3},
-		{name: "everything else is in between", cat: "Gaming", want: 2},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			assert.Equal(t, tt.want, CategoryTier(tt.cat, tt.parent))
-		})
-	}
-}
-
 func TestCategory_Top(t *testing.T) {
 	t.Parallel()
 
@@ -40,7 +15,7 @@ func TestCategory_Top(t *testing.T) {
 		category Category
 		want     string
 	}{
-		{name: "a subcategory belongs to its parent", category: Category{Name: "Groceries", Parent: GroupFood}, want: GroupFood},
+		{name: "a subcategory belongs to its parent", category: Category{Name: "Groceries", Parent: "Food and eating out"}, want: "Food and eating out"},
 		{name: "a top-level category is its own top", category: Category{Name: "Gaming"}, want: "Gaming"},
 	}
 
@@ -49,27 +24,6 @@ func TestCategory_Top(t *testing.T) {
 			t.Parallel()
 
 			assert.Equal(t, tt.want, tt.category.Top())
-		})
-	}
-}
-
-func TestMerchantKey(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		merchant string
-		want     string
-	}{
-		{name: "lowercases accented letters", merchant: "ÉXITO Poblado", want: "éxito poblado"},
-		{name: "collapses and trims spaces", merchant: "  Crepes   Y  Waffles ", want: "crepes y waffles"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			assert.Equal(t, tt.want, MerchantKey(tt.merchant))
 		})
 	}
 }
@@ -111,29 +65,6 @@ func TestMovement_IsSavings(t *testing.T) {
 			t.Parallel()
 
 			assert.Equal(t, tt.want, tt.movement.IsSavings())
-		})
-	}
-}
-
-func TestSession_Expired(t *testing.T) {
-	t.Parallel()
-
-	expires := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
-	tests := []struct {
-		name string
-		now  time.Time
-		want bool
-	}{
-		{name: "before the expiry", now: expires.Add(-time.Second), want: false},
-		{name: "exactly at the expiry", now: expires, want: true},
-		{name: "after the expiry", now: expires.Add(time.Second), want: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			assert.Equal(t, tt.want, Session{ExpiresAt: expires}.Expired(tt.now))
 		})
 	}
 }

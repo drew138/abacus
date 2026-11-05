@@ -21,7 +21,7 @@ func TestApplication_LogIn(t *testing.T) {
 		name        string
 		setupMocks  func(mocks)
 		wantToken   string
-		wantSession domain.Session
+		wantExpires time.Time
 		wantErr     error
 	}{
 		{
@@ -31,10 +31,10 @@ func TestApplication_LogIn(t *testing.T) {
 				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
 				m.tokens.On("New").Return("raw-token", nil)
 				m.clock.On("Now").Return(now)
-				m.repo.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(nil)
+				m.repo.On("CreateSession", anyCtx, token.Hash("raw-token"), int64(1), now.Add(ttl)).Return(nil)
 			},
 			wantToken:   "raw-token",
-			wantSession: domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)},
+			wantExpires: now.Add(ttl),
 		},
 		{
 			name: "rejects an unknown user with the same error as a wrong password",
@@ -82,7 +82,7 @@ func TestApplication_LogIn(t *testing.T) {
 				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
 				m.tokens.On("New").Return("raw-token", nil)
 				m.clock.On("Now").Return(now)
-				m.repo.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(errStore)
+				m.repo.On("CreateSession", anyCtx, token.Hash("raw-token"), int64(1), now.Add(ttl)).Return(errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -95,7 +95,7 @@ func TestApplication_LogIn(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			gotToken, gotSession, err := m.app(ttl).LogIn(t.Context(), "andres", "secret password")
+			gotToken, gotExpires, err := m.app(ttl).LogIn(t.Context(), "andres", "secret password")
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
@@ -103,7 +103,7 @@ func TestApplication_LogIn(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantToken, gotToken)
-			assert.Equal(t, tt.wantSession, gotSession)
+			assert.Equal(t, tt.wantExpires, gotExpires)
 		})
 	}
 }

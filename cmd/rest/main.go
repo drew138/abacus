@@ -48,7 +48,7 @@ func run() error {
 
 	app := application.New(sqlite.New(db), cfg.sessionTTL)
 	router := chi.NewRouter()
-	rest.New(router, app, cfg.importToken, cfg.maxBodyBytes)
+	rest.New(router, app, cfg.importToken)
 	if _, err := htmx.New(router, app, cfg.secureCookie); err != nil {
 		return fmt.Errorf("building web interface: %w", err)
 	}

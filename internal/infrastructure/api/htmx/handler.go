@@ -28,7 +28,6 @@ var web embed.FS
 const (
 	sessionCookie             = "abacus_session"
 	statusClientClosedRequest = 499
-	maxFormBytes              = 64 << 10
 )
 
 var (
@@ -49,8 +48,8 @@ var (
 
 type Application interface {
 	ListMonths(ctx context.Context) ([]domain.MonthSummary, error)
-	MonthReport(ctx context.Context, month string, filter domain.ExpenseFilter) (domain.MonthReport, error)
-	Trends(ctx context.Context) (domain.Trends, error)
+	ListMovements(ctx context.Context, month string) ([]domain.Movement, error)
+	CategoryTotals(ctx context.Context) (map[string]map[string]int64, error)
 	ListCategories(ctx context.Context) ([]domain.Category, error)
 	GetMovement(ctx context.Context, id int64) (domain.Movement, error)
 	CreateMovement(ctx context.Context, movement domain.Movement) (domain.Movement, error)
@@ -60,7 +59,7 @@ type Application interface {
 	RestoreMovement(ctx context.Context, id int64) error
 	Register(ctx context.Context, username, password string) (domain.User, error)
 	RegistrationOpen(ctx context.Context) (bool, error)
-	LogIn(ctx context.Context, username, password string) (string, domain.Session, error)
+	LogIn(ctx context.Context, username, password string) (string, time.Time, error)
 	Authenticate(ctx context.Context, token string) (domain.User, error)
 	LogOut(ctx context.Context, token string) error
 }
@@ -148,8 +147,7 @@ func newValidator() *validator.Validate {
 	return v
 }
 
-func (h *Handler) parseForm(w http.ResponseWriter, r *http.Request) error {
-	r.Body = http.MaxBytesReader(w, r.Body, maxFormBytes)
+func (h *Handler) parseForm(r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
 		return fmt.Errorf("%w: %w", errMalformedForm, err)
 	}
@@ -252,7 +250,7 @@ func (h *Handler) renderPage(w http.ResponseWriter, r *http.Request, page pageVi
 }
 
 func (h *Handler) renderAfterChange(w http.ResponseWriter, r *http.Request, month string, toast toastView) {
-	page, err := h.monthPage(r.Context(), month, domain.ExpenseFilter{})
+	page, err := h.monthPage(r.Context(), month, expenseFilter{})
 	if err != nil {
 		h.writeError(w, r, err)
 		return
@@ -265,17 +263,33 @@ func (h *Handler) renderAfterChange(w http.ResponseWriter, r *http.Request, mont
 	h.render(w, r, http.StatusOK, "swap", page)
 }
 
-func (h *Handler) monthPage(ctx context.Context, month string, filter domain.ExpenseFilter) (pageView, error) {
-	months, err := h.app.ListMonths(ctx)
-	if err != nil {
-		return pageView{}, err
-	}
-	report, err := h.app.MonthReport(ctx, month, filter)
+func (h *Handler) monthPage(ctx context.Context, month string, filter expenseFilter) (pageView, error) {
+	report, months, err := h.loadMonthReport(ctx, month, filter)
 	if err != nil {
 		return pageView{}, err
 	}
 	view := mapMonthView(report)
 	return pageView{Title: view.Title, Sidebar: mapSidebarView(months, month), Month: &view}, nil
+}
+
+func (h *Handler) loadMonthReport(ctx context.Context, month string, filter expenseFilter) (monthReport, []domain.MonthSummary, error) {
+	months, err := h.app.ListMonths(ctx)
+	if err != nil {
+		return monthReport{}, nil, err
+	}
+	categories, err := h.app.ListCategories(ctx)
+	if err != nil {
+		return monthReport{}, nil, err
+	}
+	totals, err := h.app.CategoryTotals(ctx)
+	if err != nil {
+		return monthReport{}, nil, err
+	}
+	movements, err := h.app.ListMovements(ctx, month)
+	if err != nil {
+		return monthReport{}, nil, err
+	}
+	return buildMonthReport(month, filter, categories, months, totals, movements), months, nil
 }
 
 type responseRecorder struct {

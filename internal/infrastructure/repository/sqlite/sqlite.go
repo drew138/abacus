@@ -29,6 +29,10 @@ func New(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
+func merchantKey(merchant string) string {
+	return strings.ToLower(strings.Join(strings.Fields(merchant), " "))
+}
+
 func now() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }

@@ -33,7 +33,7 @@ func (a *Application) UpdateMovement(ctx context.Context, movement domain.Moveme
 	}
 
 	if applyToMerchant {
-		if _, err := a.repo.Recategorise(ctx, saved.MerchantKey(), saved.Category); err != nil {
+		if _, err := a.repo.Recategorise(ctx, saved.Merchant, saved.Category); err != nil {
 			return domain.Movement{}, fmt.Errorf("recategorising the merchant of movement %d: %w", saved.ID, err)
 		}
 	}

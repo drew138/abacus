@@ -1,4 +1,6 @@
-# Abacus
+<p align="center"><img src="internal/infrastructure/api/htmx/web/static/logo.svg" alt="Abacus logo" width="96" height="96"></p>
+
+<h1 align="center">Abacus</h1>
 
 A small personal spending app: every Nu movement by month, by category, and how each
 category moves month to month. Go, SQLite and htmx, built to run as one container on a
@@ -31,7 +33,6 @@ The image holds one binary, `/abacus`, which serves the web app and the import A
 | `HTTP_ADDR` | `:8080` | listen address |
 | `SECURE_COOKIE` | `true` | set `false` only for plain-HTTP local runs |
 | `SESSION_TTL` | `720h` | how long a sign-in lasts |
-| `MAX_BODY_BYTES` | `2097152` | largest import body |
 
 ## Layout
 

@@ -36,7 +36,7 @@ func TestHandler_importMovements(t *testing.T) {
 				app.On("ImportMovements", anyCtx,
 					[]domain.Movement{{Ref: "r1", Date: time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC), Merchant: "Rappi", Amount: 42900, Category: "Food delivery", Method: domain.MethodCredit}},
 					[]domain.Category{{Name: "Board games"}}).
-					Return(domain.ImportResult{Added: 1}, nil)
+					Return(1, 0, 0, nil)
 			},
 			wantStatus: http.StatusOK,
 			wantBody:   `{"added":1,"updated":0,"kept":0}`,
@@ -92,14 +92,6 @@ func TestHandler_importMovements(t *testing.T) {
 			wantBody:   `{"type":"invalid_argument","title":"The request has invalid fields.","status":400,"errors":[{"code":"max_length","field":"movements[0].merchant","param":"120"}]}`,
 		},
 		{
-			name:       "rejects a body over the limit",
-			auth:       "Bearer " + testToken,
-			body:       `{"movements":[` + strings.Repeat(" ", 2048) + `]}`,
-			setupMocks: func(*MockApplication) {},
-			wantStatus: http.StatusRequestEntityTooLarge,
-			wantBody:   `{"type":"payload_too_large","title":"The request body is too large.","status":413}`,
-		},
-		{
 			name: "answers 503 when the store is down",
 			auth: "Bearer " + testToken,
 			body: valid,
@@ -107,7 +99,7 @@ func TestHandler_importMovements(t *testing.T) {
 				app.On("ImportMovements", anyCtx,
 					[]domain.Movement{{Ref: "r1", Date: time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC), Merchant: "Rappi", Amount: 42900, Category: "Food delivery", Method: domain.MethodCredit}},
 					[]domain.Category{{Name: "Board games"}}).
-					Return(domain.ImportResult{}, fmt.Errorf("importing: %w", domain.ErrUnavailable))
+					Return(0, 0, 0, fmt.Errorf("importing: %w", domain.ErrUnavailable))
 			},
 			wantStatus: http.StatusServiceUnavailable,
 			wantBody:   `{"type":"service_unavailable","title":"The service is temporarily unavailable.","status":503}`,
@@ -120,7 +112,7 @@ func TestHandler_importMovements(t *testing.T) {
 				app.On("ImportMovements", anyCtx,
 					[]domain.Movement{{Ref: "r1", Date: time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC), Merchant: "Rappi", Amount: 42900, Category: "Food delivery", Method: domain.MethodCredit}},
 					[]domain.Category{{Name: "Board games"}}).
-					Return(domain.ImportResult{}, fmt.Errorf("importing: %w", domain.ErrInternal))
+					Return(0, 0, 0, fmt.Errorf("importing: %w", domain.ErrInternal))
 			},
 			wantStatus: http.StatusInternalServerError,
 			wantBody:   `{"type":"internal_error","title":"Something went wrong.","status":500}`,
@@ -133,7 +125,7 @@ func TestHandler_importMovements(t *testing.T) {
 				app.On("ImportMovements", anyCtx,
 					[]domain.Movement{{Ref: "r1", Date: time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC), Merchant: "Rappi", Amount: 42900, Category: "Food delivery", Method: domain.MethodCredit}},
 					[]domain.Category{{Name: "Board games"}}).
-					Return(domain.ImportResult{}, domain.ErrUnknownCategory)
+					Return(0, 0, 0, domain.ErrUnknownCategory)
 			},
 			wantStatus: http.StatusBadRequest,
 			wantBody:   `{"type":"invalid_argument","title":"The request is invalid.","status":400,"errors":[{"code":"unknown_category","field":"category"}]}`,
@@ -147,7 +139,7 @@ func TestHandler_importMovements(t *testing.T) {
 			app := newMockApplication(t)
 			tt.setupMocks(app)
 			router := chi.NewRouter()
-			New(router, app, testToken, 1024)
+			New(router, app, testToken)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/import", strings.NewReader(tt.body))
 			if tt.auth != "" {

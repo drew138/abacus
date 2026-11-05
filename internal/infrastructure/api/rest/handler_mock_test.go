@@ -25,7 +25,7 @@ func newMockApplication(t *testing.T) *MockApplication {
 	return m
 }
 
-func (m *MockApplication) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (domain.ImportResult, error) {
+func (m *MockApplication) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (int, int, int, error) {
 	args := m.Called(ctx, movements, categories)
-	return args.Get(0).(domain.ImportResult), args.Error(1)
+	return args.Int(0), args.Int(1), args.Int(2), args.Error(3)
 }

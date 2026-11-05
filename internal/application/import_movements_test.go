@@ -14,29 +14,29 @@ func TestApplication_ImportMovements(t *testing.T) {
 
 	categories := []domain.Category{{Name: "Board games"}}
 	tests := []struct {
-		name       string
-		movements  []domain.Movement
-		setupMocks func(mocks)
-		want       domain.ImportResult
-		wantErr    error
+		name        string
+		movements   []domain.Movement
+		setupMocks  func(mocks)
+		wantAdded   int
+		wantUpdated int
+		wantKept    int
+		wantErr     error
 	}{
 		{
-			name: "applies merchant rules, keeps savings and marks every movement as from a statement",
+			name: "ensures the categories and imports every movement as from a statement",
 			movements: []domain.Movement{
-				{Ref: "a", Merchant: "Éxito  Poblado", Category: "Groceries", Amount: 80000},
-				{Ref: "b", Merchant: "Rappi", Category: "Food delivery", Amount: 42900},
-				{Ref: "c", Merchant: "To Hapi", Category: domain.CategorySavings, Amount: 1000000},
+				{Ref: "a", Merchant: "Rappi", Category: "Food delivery", Amount: 42900},
+				{Ref: "b", Merchant: "To Hapi", Category: domain.CategorySavings, Amount: 1000000},
 			},
 			setupMocks: func(m mocks) {
 				m.repo.On("Ensure", anyCtx, categories).Return(nil)
-				m.repo.On("MerchantRules", anyCtx).Return(map[string]string{"éxito poblado": "Snacks and candy", "to hapi": "Other"}, nil)
 				m.repo.On("Import", anyCtx, []domain.Movement{
-					{Ref: "a", Merchant: "Éxito  Poblado", Category: "Snacks and candy", Amount: 80000, Source: domain.SourceStatement},
-					{Ref: "b", Merchant: "Rappi", Category: "Food delivery", Amount: 42900, Source: domain.SourceStatement},
-					{Ref: "c", Merchant: "To Hapi", Category: domain.CategorySavings, Amount: 1000000, Source: domain.SourceStatement},
-				}).Return(domain.ImportResult{Added: 3}, nil)
+					{Ref: "a", Merchant: "Rappi", Category: "Food delivery", Amount: 42900, Source: domain.SourceStatement},
+					{Ref: "b", Merchant: "To Hapi", Category: domain.CategorySavings, Amount: 1000000, Source: domain.SourceStatement},
+				}).Return(1, 0, 1, nil)
 			},
-			want: domain.ImportResult{Added: 3},
+			wantAdded: 1,
+			wantKept:  1,
 		},
 		{
 			name:      "returns the error when categories cannot be saved",
@@ -47,22 +47,11 @@ func TestApplication_ImportMovements(t *testing.T) {
 			wantErr: domain.ErrUnavailable,
 		},
 		{
-			name:      "returns the error when rules cannot be loaded",
+			name:      "returns the error when the import fails",
 			movements: []domain.Movement{{Ref: "a"}},
 			setupMocks: func(m mocks) {
 				m.repo.On("Ensure", anyCtx, categories).Return(nil)
-				m.repo.On("MerchantRules", anyCtx).Return(map[string]string(nil), errStore)
-			},
-			wantErr: domain.ErrUnavailable,
-		},
-		{
-			name:      "returns the error when the import fails",
-			movements: []domain.Movement{{Ref: "a", Merchant: "Uber", Category: "Rides and transport"}},
-			setupMocks: func(m mocks) {
-				m.repo.On("Ensure", anyCtx, categories).Return(nil)
-				m.repo.On("MerchantRules", anyCtx).Return(map[string]string{}, nil)
-				m.repo.On("Import", anyCtx, []domain.Movement{{Ref: "a", Merchant: "Uber", Category: "Rides and transport", Source: domain.SourceStatement}}).
-					Return(domain.ImportResult{}, errStore)
+				m.repo.On("Import", anyCtx, []domain.Movement{{Ref: "a", Source: domain.SourceStatement}}).Return(0, 0, 0, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -75,14 +64,16 @@ func TestApplication_ImportMovements(t *testing.T) {
 			m := newMocks(t)
 			tt.setupMocks(m)
 
-			got, err := m.app(0).ImportMovements(t.Context(), tt.movements, categories)
+			added, updated, kept, err := m.app(0).ImportMovements(t.Context(), tt.movements, categories)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.wantAdded, added)
+			assert.Equal(t, tt.wantUpdated, updated)
+			assert.Equal(t, tt.wantKept, kept)
 		})
 	}
 }

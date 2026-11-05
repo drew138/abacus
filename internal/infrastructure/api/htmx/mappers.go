@@ -32,9 +32,9 @@ var knownColors = map[string]string{
 	"Gaming":                            "#5865c9",
 	"Entertainment":                     "#e87ba4",
 	"Travel":                            "#3d8fb0",
-	domain.CategoryOther:                "#8a909c",
+	categoryOther:                       "#8a909c",
 	domain.CategorySavings:              "#15803d",
-	domain.GroupFood:                    "#e0763a",
+	groupFood:                           "#e0763a",
 }
 
 var spareColors = []string{"#a0622d", "#b5179e", "#6f8f00", "#3d5a99", "#d98e04", "#008300", "#e34948", "#0096b4"}
@@ -147,7 +147,7 @@ func mapSidebarView(months []domain.MonthSummary, selected string) sidebarView {
 	return view
 }
 
-func mapMonthView(report domain.MonthReport) monthView {
+func mapMonthView(report monthReport) monthView {
 	view := monthView{
 		Key:          report.Month,
 		Title:        monthName(report.Month),
@@ -168,7 +168,7 @@ func mapMonthView(report domain.MonthReport) monthView {
 	}
 	for _, g := range report.Groups {
 		filter := g.Name
-		view.Ranks = append(view.Ranks, mapRankView(g.CategoryAmount, maxTotal, report.Summary.Spent, false, filter, g.Name))
+		view.Ranks = append(view.Ranks, mapRankView(g.categoryAmount, maxTotal, report.Summary.Spent, false, filter, g.Name))
 		for _, sub := range g.Subcategories {
 			view.Ranks = append(view.Ranks, mapRankView(sub, maxTotal, report.Summary.Spent, true, sub.Name, g.Name))
 		}
@@ -184,7 +184,7 @@ func mapMonthView(report domain.MonthReport) monthView {
 	return view
 }
 
-func mapRankView(a domain.CategoryAmount, maxTotal, spent int64, sub bool, filter, hover string) rankView {
+func mapRankView(a categoryAmount, maxTotal, spent int64, sub bool, filter, hover string) rankView {
 	view := rankView{
 		Name:   a.Name,
 		Color:  categoryColor(a.Name),
@@ -201,7 +201,7 @@ func mapRankView(a domain.CategoryAmount, maxTotal, spent int64, sub bool, filte
 	return view
 }
 
-func mapDonutView(groups []domain.GroupTotal, summary domain.MonthSummary) donutView {
+func mapDonutView(groups []groupTotal, summary domain.MonthSummary) donutView {
 	const outer, inner, cx, cy = 84.0, 60.0, 96.0, 96.0
 	view := donutView{Total: pesos(summary.Spent), Count: summary.Movements}
 	var total int64
@@ -244,7 +244,7 @@ func mapDonutView(groups []domain.GroupTotal, summary domain.MonthSummary) donut
 	return view
 }
 
-func mapExpensesView(report domain.MonthReport) expensesView {
+func mapExpensesView(report monthReport) expensesView {
 	view := expensesView{Month: report.Month, Filter: report.Filter.Category, Search: report.Filter.Search}
 	for _, g := range report.Expenses {
 		group := expenseGroupView{Category: g.Category, Parent: g.Parent, Color: categoryColor(g.Category), Count: len(g.Movements), Total: pesos(g.Total), IsSavings: g.Category == domain.CategorySavings}
@@ -287,7 +287,7 @@ func mapRowView(m domain.Movement, confirm bool) rowView {
 	}
 }
 
-func mapTrendsView(trends domain.Trends, only string) trendsView {
+func mapTrendsView(trends trends, only string) trendsView {
 	n := len(trends.Months)
 	if n == 0 {
 		return trendsView{Empty: true}
@@ -344,7 +344,7 @@ func cell(v int64) string {
 	return shortPesos(v)
 }
 
-func mapTableRowView(row domain.TrendRow) tableRowView {
+func mapTableRowView(row trendRow) tableRowView {
 	view := tableRowView{Name: row.Name, Color: categoryColor(row.Name)}
 	for _, v := range row.Values {
 		view.Cells = append(view.Cells, cell(v))
@@ -355,7 +355,7 @@ func mapTableRowView(row domain.TrendRow) tableRowView {
 	return view
 }
 
-func mapBarsView(trends domain.Trends, only string) barsView {
+func mapBarsView(trends trends, only string) barsView {
 	const width, height, left, bottom, top = 640, 250, 56.0, 26.0, 16.0
 	n := len(trends.Months)
 	view := barsView{Width: width, Height: height}
@@ -447,8 +447,9 @@ func mapFormView(m domain.Movement, categories []domain.Category, today time.Tim
 	}
 	sorted := append([]domain.Category(nil), categories...)
 	sort.Slice(sorted, func(i, j int) bool {
-		if sorted[i].Tier() != sorted[j].Tier() {
-			return sorted[i].Tier() < sorted[j].Tier()
+		ti, tj := categoryTier(sorted[i].Name, sorted[i].Parent), categoryTier(sorted[j].Name, sorted[j].Parent)
+		if ti != tj {
+			return ti < tj
 		}
 		return sorted[i].Name < sorted[j].Name
 	})
@@ -468,8 +469,9 @@ func mapMenuView(m domain.Movement, categories []domain.Category) menuView {
 	view := menuView{ID: m.ID, Merchant: m.Merchant, Month: m.Month()}
 	sorted := append([]domain.Category(nil), categories...)
 	sort.Slice(sorted, func(i, j int) bool {
-		if sorted[i].Tier() != sorted[j].Tier() {
-			return sorted[i].Tier() < sorted[j].Tier()
+		ti, tj := categoryTier(sorted[i].Name, sorted[i].Parent), categoryTier(sorted[j].Name, sorted[j].Parent)
+		if ti != tj {
+			return ti < tj
 		}
 		return sorted[i].Name < sorted[j].Name
 	})
@@ -521,10 +523,7 @@ func mapFormErrors(err error) []string {
 }
 
 func mapErrorResponse(err error) (int, string) {
-	var tooLarge *http.MaxBytesError
 	switch {
-	case errors.As(err, &tooLarge):
-		return http.StatusRequestEntityTooLarge, "That form is too large."
 	case errors.Is(err, errMalformedForm):
 		return http.StatusBadRequest, "That form could not be read. Reload the page and try again."
 	case errors.Is(err, errCrossSite):

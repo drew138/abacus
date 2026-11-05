@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-
-	"github.com/drew138/abacus/internal/domain"
 )
 
 func (h *Handler) getMonth(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +14,7 @@ func (h *Handler) getMonth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page, err := h.monthPage(r.Context(), month, domain.ExpenseFilter{})
+	page, err := h.monthPage(r.Context(), month, expenseFilter{})
 	if err != nil {
 		h.writeError(w, r, err)
 		return

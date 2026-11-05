@@ -12,7 +12,7 @@ import (
 func TestApplication_CreateMovement(t *testing.T) {
 	t.Parallel()
 
-	categories := []domain.Category{{Name: "Restaurants and cafés", Parent: domain.GroupFood}, {Name: domain.CategorySavings}}
+	categories := []domain.Category{{Name: "Restaurants and cafés", Parent: "Food and eating out"}, {Name: domain.CategorySavings}}
 	date := day(2026, 10, 18)
 	tests := []struct {
 		name       string

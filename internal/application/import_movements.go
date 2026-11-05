@@ -7,34 +7,18 @@ import (
 	"github.com/drew138/abacus/internal/domain"
 )
 
-func (a *Application) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (domain.ImportResult, error) {
+func (a *Application) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (added, updated, kept int, err error) {
 	if err := a.repo.Ensure(ctx, categories); err != nil {
-		return domain.ImportResult{}, fmt.Errorf("ensuring %d categories: %w", len(categories), err)
+		return 0, 0, 0, fmt.Errorf("ensuring %d categories: %w", len(categories), err)
 	}
 
-	rules, err := a.repo.MerchantRules(ctx)
-	if err != nil {
-		return domain.ImportResult{}, fmt.Errorf("loading merchant rules: %w", err)
-	}
-
-	for i, m := range movements {
-		movements[i] = applyImportRule(m, rules)
+	for i := range movements {
 		movements[i].Source = domain.SourceStatement
 	}
 
-	result, err := a.repo.Import(ctx, movements)
+	added, updated, kept, err = a.repo.Import(ctx, movements)
 	if err != nil {
-		return domain.ImportResult{}, fmt.Errorf("importing %d movements: %w", len(movements), err)
+		return 0, 0, 0, fmt.Errorf("importing %d movements: %w", len(movements), err)
 	}
-	return result, nil
-}
-
-func applyImportRule(m domain.Movement, rules map[string]string) domain.Movement {
-	if m.IsSavings() {
-		return m
-	}
-	if category, ok := rules[m.MerchantKey()]; ok {
-		m.Category = category
-	}
-	return m
+	return added, updated, kept, nil
 }

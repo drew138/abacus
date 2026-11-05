@@ -22,12 +22,12 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:     "recategorises by the normalised merchant",
+			name:     "recategorises the merchant",
 			merchant: "  UBER   Rides",
 			category: "Other",
 			setupMocks: func(m mocks) {
 				m.repo.On("List", anyCtx).Return(categories, nil)
-				m.repo.On("Recategorise", anyCtx, "uber rides", "Other").Return(16, nil)
+				m.repo.On("Recategorise", anyCtx, "  UBER   Rides", "Other").Return(16, nil)
 			},
 			want: 16,
 		},
@@ -64,7 +64,7 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			category: "Other",
 			setupMocks: func(m mocks) {
 				m.repo.On("List", anyCtx).Return(categories, nil)
-				m.repo.On("Recategorise", anyCtx, "uber", "Other").Return(0, errStore)
+				m.repo.On("Recategorise", anyCtx, "Uber", "Other").Return(0, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

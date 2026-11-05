@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) postRegister(w http.ResponseWriter, r *http.Request) {
-	if err := h.parseForm(w, r); err != nil {
+	if err := h.parseForm(r); err != nil {
 		h.writeError(w, r, err)
 		return
 	}
@@ -33,12 +33,12 @@ func (h *Handler) postRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	raw, session, err := h.app.LogIn(r.Context(), form.Username, form.Password)
+	raw, expiresAt, err := h.app.LogIn(r.Context(), form.Username, form.Password)
 	if err != nil {
 		h.writeError(w, r, err)
 		return
 	}
-	h.setSessionCookie(w, raw, session.ExpiresAt)
+	h.setSessionCookie(w, raw, expiresAt)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 

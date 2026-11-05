@@ -13,8 +13,8 @@ import (
 	"github.com/drew138/abacus/internal/domain"
 )
 
-func mapImportResponse(r domain.ImportResult) ImportResponse {
-	return ImportResponse{Added: r.Added, Updated: r.Updated, Kept: r.Kept}
+func mapImportResponse(added, updated, kept int) ImportResponse {
+	return ImportResponse{Added: added, Updated: updated, Kept: kept}
 }
 
 var domainErrors = []struct {
@@ -68,12 +68,9 @@ var numberCodes = map[string]string{
 }
 
 func mapErrorResponse(err error) ErrorResponse {
-	var tooLarge *http.MaxBytesError
 	var wrongType *json.UnmarshalTypeError
 	var failed validator.ValidationErrors
 	switch {
-	case errors.As(err, &tooLarge):
-		return ErrorResponse{Type: "payload_too_large", Title: "The request body is too large.", Status: http.StatusRequestEntityTooLarge}
 	case errors.As(err, &wrongType):
 		return mapInvalidParamResponse(wrongType.Field, jsonType(wrongType.Type))
 	case errors.Is(err, errMalformedBody):

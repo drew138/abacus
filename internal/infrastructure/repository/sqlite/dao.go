@@ -59,16 +59,6 @@ func (r monthRow) toDomain() domain.MonthSummary {
 	return domain.MonthSummary{Month: r.Month, Spent: r.Spent, Saved: r.Saved, Movements: r.Movements}
 }
 
-type totalRow struct {
-	Month    string
-	Category string
-	Total    int64
-}
-
-func (r totalRow) toDomain() domain.CategoryTotal {
-	return domain.CategoryTotal{Month: r.Month, Category: r.Category, Total: r.Total}
-}
-
 type userRow struct {
 	ID           int64
 	Username     string
@@ -77,15 +67,4 @@ type userRow struct {
 
 func (r userRow) toDomain() domain.User {
 	return domain.User{ID: r.ID, Username: r.Username, PasswordHash: r.PasswordHash}
-}
-
-type sessionRow struct {
-	TokenHash string
-	UserID    int64
-	ExpiresAt string
-}
-
-func (r sessionRow) toDomain() domain.Session {
-	expires, _ := time.Parse(time.RFC3339, r.ExpiresAt)
-	return domain.Session{TokenHash: r.TokenHash, UserID: r.UserID, ExpiresAt: expires}
 }

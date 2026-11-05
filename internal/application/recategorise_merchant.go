@@ -17,7 +17,7 @@ func (a *Application) RecategoriseMerchant(ctx context.Context, merchant, catego
 		return 0, err
 	}
 
-	changed, err := a.repo.Recategorise(ctx, domain.MerchantKey(merchant), category)
+	changed, err := a.repo.Recategorise(ctx, merchant, category)
 	if err != nil {
 		return 0, fmt.Errorf("recategorising a merchant: %w", err)
 	}

@@ -9,17 +9,24 @@ import (
 	"github.com/drew138/abacus/internal/domain"
 )
 
-func (r *Repository) Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error) {
-	var result domain.ImportResult
+func (r *Repository) Import(ctx context.Context, movements []domain.Movement) (added, updated, kept int, err error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return result, domainError(err, "starting import")
+		return 0, 0, 0, domainError(err, "starting import")
 	}
 	defer func() { _ = tx.Rollback() }()
+
+	rules, err := importRules(ctx, tx)
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
 	at := now()
 	for _, m := range movements {
 		row := mapMovementRow(m)
+		if rule, ok := rules[row.MerchantKey]; ok && row.Category != domain.CategorySavings {
+			row.Category = rule
+		}
 		var id int64
 		var edited bool
 		var deletedAt sql.NullString
@@ -30,13 +37,13 @@ func (r *Repository) Import(ctx context.Context, movements []domain.Movement) (d
 				`INSERT INTO movements (ref, occurred_on, merchant, merchant_key, amount, category, method, note, source, edited, created_at, updated_at)
 				 VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, 0, ?, ?)`,
 				row.Ref, row.OccurredOn, row.Merchant, row.MerchantKey, row.Amount, row.Category, row.Method, row.Source, at, at); err != nil {
-				return domain.ImportResult{}, domainError(err, "inserting an imported movement")
+				return 0, 0, 0, domainError(err, "inserting an imported movement")
 			}
-			result.Added++
+			added++
 		case err != nil:
-			return domain.ImportResult{}, domainError(err, "finding an imported movement")
+			return 0, 0, 0, domainError(err, "finding an imported movement")
 		case edited || deletedAt.Valid:
-			result.Kept++
+			kept++
 		default:
 			res, err := tx.ExecContext(ctx,
 				`UPDATE movements SET occurred_on = ?, merchant = ?, merchant_key = ?, amount = ?, category = ?, method = ?, updated_at = ?
@@ -44,18 +51,39 @@ func (r *Repository) Import(ctx context.Context, movements []domain.Movement) (d
 				row.OccurredOn, row.Merchant, row.MerchantKey, row.Amount, row.Category, row.Method, at,
 				id, row.OccurredOn, row.Merchant, row.Amount, row.Category, row.Method)
 			if err != nil {
-				return domain.ImportResult{}, domainError(err, fmt.Sprintf("updating imported movement %d", id))
+				return 0, 0, 0, domainError(err, fmt.Sprintf("updating imported movement %d", id))
 			}
 			if n, _ := res.RowsAffected(); n > 0 {
-				result.Updated++
+				updated++
 			} else {
-				result.Kept++
+				kept++
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return domain.ImportResult{}, domainError(err, "committing import")
+		return 0, 0, 0, domainError(err, "committing import")
 	}
-	return result, nil
+	return added, updated, kept, nil
+}
+
+func importRules(ctx context.Context, tx *sql.Tx) (map[string]string, error) {
+	rows, err := tx.QueryContext(ctx, "SELECT merchant_key, category FROM merchant_rules")
+	if err != nil {
+		return nil, domainError(err, "selecting merchant rules")
+	}
+	defer rows.Close()
+
+	rules := map[string]string{}
+	for rows.Next() {
+		var key, category string
+		if err := rows.Scan(&key, &category); err != nil {
+			return nil, domainError(err, "reading a merchant rule")
+		}
+		rules[key] = category
+	}
+	if err := rows.Err(); err != nil {
+		return nil, domainError(err, "reading merchant rules")
+	}
+	return rules, nil
 }

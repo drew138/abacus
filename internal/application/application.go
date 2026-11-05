@@ -10,24 +10,23 @@ import (
 )
 
 type Repository interface {
-	Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error)
+	Import(ctx context.Context, movements []domain.Movement) (added, updated, kept int, err error)
 	Months(ctx context.Context) ([]domain.MonthSummary, error)
 	ListByMonth(ctx context.Context, month string) ([]domain.Movement, error)
-	Totals(ctx context.Context) ([]domain.CategoryTotal, error)
+	Totals(ctx context.Context) (map[string]map[string]int64, error)
 	Find(ctx context.Context, id int64) (domain.Movement, error)
 	Create(ctx context.Context, movement domain.Movement) (domain.Movement, error)
 	Update(ctx context.Context, movement domain.Movement) (domain.Movement, error)
 	SetDeleted(ctx context.Context, id int64, deleted bool) error
-	Recategorise(ctx context.Context, merchantKey, category string) (int, error)
-	MerchantRules(ctx context.Context) (map[string]string, error)
+	Recategorise(ctx context.Context, merchant, category string) (int, error)
 	List(ctx context.Context) ([]domain.Category, error)
 	Ensure(ctx context.Context, categories []domain.Category) error
 	FindByUsername(ctx context.Context, username string) (domain.User, error)
 	FindUser(ctx context.Context, id int64) (domain.User, error)
 	HasUsers(ctx context.Context) (bool, error)
 	CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error)
-	CreateSession(ctx context.Context, session domain.Session) error
-	FindSession(ctx context.Context, tokenHash string) (domain.Session, error)
+	CreateSession(ctx context.Context, tokenHash string, userID int64, expiresAt time.Time) error
+	FindSession(ctx context.Context, tokenHash string) (userID int64, expiresAt time.Time, err error)
 	DeleteSession(ctx context.Context, tokenHash string) error
 }
 

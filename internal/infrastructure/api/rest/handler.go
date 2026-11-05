@@ -26,18 +26,17 @@ var (
 )
 
 type Application interface {
-	ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (domain.ImportResult, error)
+	ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (added, updated, kept int, err error)
 }
 
 type Handler struct {
-	app          Application
-	validate     *validator.Validate
-	importToken  string
-	maxBodyBytes int64
+	app         Application
+	validate    *validator.Validate
+	importToken string
 }
 
-func New(router chi.Router, app Application, importToken string, maxBodyBytes int64) *Handler {
-	h := &Handler{app: app, validate: newValidator(), importToken: importToken, maxBodyBytes: maxBodyBytes}
+func New(router chi.Router, app Application, importToken string) *Handler {
+	h := &Handler{app: app, validate: newValidator(), importToken: importToken}
 	router.Post("/api/import", h.logged(h.importer(h.importMovements)))
 	return h
 }
@@ -62,12 +61,10 @@ func newValidator() *validator.Validate {
 	return v
 }
 
-func (h *Handler) validateRequest(w http.ResponseWriter, r *http.Request, dst any) error {
-	r.Body = http.MaxBytesReader(w, r.Body, h.maxBodyBytes)
+func (h *Handler) validateRequest(r *http.Request, dst any) error {
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
-		var tooLarge *http.MaxBytesError
 		var wrongType *json.UnmarshalTypeError
-		if errors.As(err, &tooLarge) || errors.As(err, &wrongType) {
+		if errors.As(err, &wrongType) {
 			return err
 		}
 		return fmt.Errorf("%w: %w", errMalformedBody, err)

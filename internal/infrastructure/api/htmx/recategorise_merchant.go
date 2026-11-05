@@ -6,7 +6,7 @@ import (
 )
 
 func (h *Handler) recategoriseMerchant(w http.ResponseWriter, r *http.Request) {
-	if err := h.parseForm(w, r); err != nil {
+	if err := h.parseForm(r); err != nil {
 		h.writeError(w, r, err)
 		return
 	}
