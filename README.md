@@ -16,12 +16,9 @@ merchant rules you set in the app apply to future imports.
 
 | Binary | Does |
 |---|---|
-| `rest` | serves the web app and the import API |
-| `migrate` | applies the migrations in `migration/`; run it before `/rest` on every deploy |
-| `cli set-password <username>` | creates the user or changes the password, and signs out every session |
-
-The image runs on Alpine with the `sqlite3` shell installed, so the database can be inspected with
-`docker exec -it abacus sqlite3 /data/abacus.db`.
+| `/rest` | serves the web app and the import API |
+| `/migrate` | applies the migrations in `migration/`; run it before `/rest` on every deploy |
+| `/cli set-password <username>` | creates the user or changes the password, and signs out every session |
 
 ## Configuration
 
