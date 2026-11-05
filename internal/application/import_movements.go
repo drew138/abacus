@@ -8,11 +8,11 @@ import (
 )
 
 func (a *Application) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (domain.ImportResult, error) {
-	if err := a.categories.Ensure(ctx, categories); err != nil {
+	if err := a.repo.Ensure(ctx, categories); err != nil {
 		return domain.ImportResult{}, fmt.Errorf("ensuring %d categories: %w", len(categories), err)
 	}
 
-	rules, err := a.movements.MerchantRules(ctx)
+	rules, err := a.repo.MerchantRules(ctx)
 	if err != nil {
 		return domain.ImportResult{}, fmt.Errorf("loading merchant rules: %w", err)
 	}
@@ -22,7 +22,7 @@ func (a *Application) ImportMovements(ctx context.Context, movements []domain.Mo
 		movements[i].Source = domain.SourceStatement
 	}
 
-	result, err := a.movements.Import(ctx, movements)
+	result, err := a.repo.Import(ctx, movements)
 	if err != nil {
 		return domain.ImportResult{}, fmt.Errorf("importing %d movements: %w", len(movements), err)
 	}

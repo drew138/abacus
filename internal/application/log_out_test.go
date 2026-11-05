@@ -22,7 +22,7 @@ func TestApplication_LogOut(t *testing.T) {
 			name: "deletes the session",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("DeleteSession", anyCtx, token.Hash("raw")).Return(nil)
+				m.repo.On("DeleteSession", anyCtx, token.Hash("raw")).Return(nil)
 			},
 		},
 		{
@@ -34,7 +34,7 @@ func TestApplication_LogOut(t *testing.T) {
 			name: "returns the error when the store fails",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("DeleteSession", anyCtx, token.Hash("raw")).Return(errStore)
+				m.repo.On("DeleteSession", anyCtx, token.Hash("raw")).Return(errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

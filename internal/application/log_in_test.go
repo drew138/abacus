@@ -27,11 +27,11 @@ func TestApplication_LogIn(t *testing.T) {
 		{
 			name: "creates a session that expires after the ttl",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", anyCtx, "hash", "secret password").Return(true, nil)
-				m.tokens.On("New", anyCtx).Return("raw-token", nil)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
+				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
+				m.tokens.On("New").Return("raw-token", nil)
 				m.clock.On("Now").Return(now)
-				m.sessions.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(nil)
+				m.repo.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(nil)
 			},
 			wantToken:   "raw-token",
 			wantSession: domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)},
@@ -39,50 +39,50 @@ func TestApplication_LogIn(t *testing.T) {
 		{
 			name: "rejects an unknown user with the same error as a wrong password",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, domain.ErrNotFound)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrInvalidCredentials,
 		},
 		{
 			name: "rejects a wrong password",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", anyCtx, "hash", "secret password").Return(false, nil)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
+				m.passwords.On("Matches", "hash", "secret password").Return(false, nil)
 			},
 			wantErr: domain.ErrInvalidCredentials,
 		},
 		{
 			name: "returns the error when the user cannot be loaded",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, errStore)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(domain.User{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
 		{
 			name: "returns the error when the password cannot be checked",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", anyCtx, "hash", "secret password").Return(false, domain.ErrInternal)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
+				m.passwords.On("Matches", "hash", "secret password").Return(false, domain.ErrInternal)
 			},
 			wantErr: domain.ErrInternal,
 		},
 		{
 			name: "returns the error when no token can be made",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", anyCtx, "hash", "secret password").Return(true, nil)
-				m.tokens.On("New", anyCtx).Return("", domain.ErrInternal)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
+				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
+				m.tokens.On("New").Return("", domain.ErrInternal)
 			},
 			wantErr: domain.ErrInternal,
 		},
 		{
 			name: "returns the error when the session cannot be saved",
 			setupMocks: func(m mocks) {
-				m.users.On("FindByUsername", anyCtx, "andres").Return(user, nil)
-				m.passwords.On("Matches", anyCtx, "hash", "secret password").Return(true, nil)
-				m.tokens.On("New", anyCtx).Return("raw-token", nil)
+				m.repo.On("FindByUsername", anyCtx, "andres").Return(user, nil)
+				m.passwords.On("Matches", "hash", "secret password").Return(true, nil)
+				m.tokens.On("New").Return("raw-token", nil)
 				m.clock.On("Now").Return(now)
-				m.sessions.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(errStore)
+				m.repo.On("CreateSession", anyCtx, domain.Session{TokenHash: token.Hash("raw-token"), UserID: 1, ExpiresAt: now.Add(ttl)}).Return(errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

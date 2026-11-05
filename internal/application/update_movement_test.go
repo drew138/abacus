@@ -28,10 +28,10 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "marks an imported movement as edited and keeps its ref",
 			movement: domain.Movement{ID: 2, Date: date, Merchant: "Rappi", Amount: 45000, Category: "Groceries", Method: domain.MethodCredit, Note: "tip"},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(2)).Return(imported, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Find", anyCtx, int64(2)).Return(imported, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 45000, Category: "Groceries", Method: domain.MethodCredit, Note: "tip", Source: domain.SourceStatement, Edited: true}
-				m.movements.On("Update", anyCtx, saved).Return(saved, nil)
+				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
 			},
 			want: domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 45000, Category: "Groceries", Method: domain.MethodCredit, Note: "tip", Source: domain.SourceStatement, Edited: true},
 		},
@@ -39,10 +39,10 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "does not mark a manual movement as edited",
 			movement: domain.Movement{ID: 6, Date: date, Merchant: "Empanadas", Amount: 15000, Category: "Groceries", Method: domain.MethodDebit},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(6)).Return(manual, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Find", anyCtx, int64(6)).Return(manual, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 6, Date: date, Merchant: "Empanadas", Amount: 15000, Category: "Groceries", Method: domain.MethodDebit, Source: domain.SourceManual}
-				m.movements.On("Update", anyCtx, saved).Return(saved, nil)
+				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
 			},
 			want: domain.Movement{ID: 6, Date: date, Merchant: "Empanadas", Amount: 15000, Category: "Groceries", Method: domain.MethodDebit, Source: domain.SourceManual},
 		},
@@ -51,11 +51,11 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			movement:        domain.Movement{ID: 2, Date: date, Merchant: "Rappi", Amount: 42900, Category: "Groceries", Method: domain.MethodCredit},
 			applyToMerchant: true,
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(2)).Return(imported, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Find", anyCtx, int64(2)).Return(imported, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 42900, Category: "Groceries", Method: domain.MethodCredit, Source: domain.SourceStatement, Edited: true}
-				m.movements.On("Update", anyCtx, saved).Return(saved, nil)
-				m.movements.On("Recategorise", anyCtx, "rappi", "Groceries").Return(4, nil)
+				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
+				m.repo.On("Recategorise", anyCtx, "rappi", "Groceries").Return(4, nil)
 			},
 			want: domain.Movement{ID: 2, Ref: "r2", Date: date, Merchant: "Rappi", Amount: 42900, Category: "Groceries", Method: domain.MethodCredit, Source: domain.SourceStatement, Edited: true},
 		},
@@ -63,7 +63,7 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "returns not found for a missing movement",
 			movement: domain.Movement{ID: 99, Category: "Groceries"},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(99)).Return(domain.Movement{}, domain.ErrNotFound)
+				m.repo.On("Find", anyCtx, int64(99)).Return(domain.Movement{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotFound,
 		},
@@ -71,8 +71,8 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "rejects an unknown category",
 			movement: domain.Movement{ID: 2, Category: "Nope"},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(2)).Return(imported, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Find", anyCtx, int64(2)).Return(imported, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 			},
 			wantErr: domain.ErrUnknownCategory,
 		},
@@ -80,8 +80,8 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "returns the error when categories cannot be listed",
 			movement: domain.Movement{ID: 2, Category: "Groceries"},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(2)).Return(imported, nil)
-				m.categories.On("List", anyCtx).Return([]domain.Category(nil), errStore)
+				m.repo.On("Find", anyCtx, int64(2)).Return(imported, nil)
+				m.repo.On("List", anyCtx).Return([]domain.Category(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -89,9 +89,9 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			name:     "returns the error when saving fails",
 			movement: domain.Movement{ID: 6, Category: "Groceries"},
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(6)).Return(manual, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Update", anyCtx, domain.Movement{ID: 6, Category: "Groceries", Source: domain.SourceManual}).Return(domain.Movement{}, errStore)
+				m.repo.On("Find", anyCtx, int64(6)).Return(manual, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Update", anyCtx, domain.Movement{ID: 6, Category: "Groceries", Source: domain.SourceManual}).Return(domain.Movement{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -100,11 +100,11 @@ func TestApplication_UpdateMovement(t *testing.T) {
 			movement:        domain.Movement{ID: 6, Merchant: "Empanadas", Category: "Groceries"},
 			applyToMerchant: true,
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(6)).Return(manual, nil)
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Find", anyCtx, int64(6)).Return(manual, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 				saved := domain.Movement{ID: 6, Merchant: "Empanadas", Category: "Groceries", Source: domain.SourceManual}
-				m.movements.On("Update", anyCtx, saved).Return(saved, nil)
-				m.movements.On("Recategorise", anyCtx, "empanadas", "Groceries").Return(0, errStore)
+				m.repo.On("Update", anyCtx, saved).Return(saved, nil)
+				m.repo.On("Recategorise", anyCtx, "empanadas", "Groceries").Return(0, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

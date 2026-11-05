@@ -21,14 +21,14 @@ func TestApplication_ListMonths(t *testing.T) {
 		{
 			name: "returns the months",
 			setupMocks: func(m mocks) {
-				m.movements.On("Months", anyCtx).Return([]domain.MonthSummary{{Month: "2026-10", Spent: 1}}, nil)
+				m.repo.On("Months", anyCtx).Return([]domain.MonthSummary{{Month: "2026-10", Spent: 1}}, nil)
 			},
 			want: []domain.MonthSummary{{Month: "2026-10", Spent: 1}},
 		},
 		{
 			name: "returns the error",
 			setupMocks: func(m mocks) {
-				m.movements.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
+				m.repo.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

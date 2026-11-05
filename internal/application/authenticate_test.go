@@ -27,9 +27,9 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "returns the user of a live session",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
 				m.clock.On("Now").Return(now)
-				m.users.On("FindUser", anyCtx, int64(1)).Return(domain.User{ID: 1, Username: "andres"}, nil)
+				m.repo.On("FindUser", anyCtx, int64(1)).Return(domain.User{ID: 1, Username: "andres"}, nil)
 			},
 			want: domain.User{ID: 1, Username: "andres"},
 		},
@@ -43,7 +43,7 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "rejects an unknown token",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(domain.Session{}, domain.ErrNotFound)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(domain.Session{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotAuthenticated,
 		},
@@ -51,7 +51,7 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "rejects an expired session",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
 				m.clock.On("Now").Return(now.Add(2 * time.Hour))
 			},
 			wantErr: domain.ErrNotAuthenticated,
@@ -60,9 +60,9 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "rejects a session whose user is gone",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
 				m.clock.On("Now").Return(now)
-				m.users.On("FindUser", anyCtx, int64(1)).Return(domain.User{}, domain.ErrNotFound)
+				m.repo.On("FindUser", anyCtx, int64(1)).Return(domain.User{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotAuthenticated,
 		},
@@ -70,7 +70,7 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "returns the error when sessions cannot be read",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(domain.Session{}, errStore)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(domain.Session{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -78,9 +78,9 @@ func TestApplication_Authenticate(t *testing.T) {
 			name: "returns the error when the user cannot be read",
 			raw:  "raw",
 			setupMocks: func(m mocks) {
-				m.sessions.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
+				m.repo.On("FindSession", anyCtx, token.Hash("raw")).Return(session, nil)
 				m.clock.On("Now").Return(now)
-				m.users.On("FindUser", anyCtx, int64(1)).Return(domain.User{}, errStore)
+				m.repo.On("FindUser", anyCtx, int64(1)).Return(domain.User{}, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

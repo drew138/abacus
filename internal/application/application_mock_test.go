@@ -1,8 +1,8 @@
 package application
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,145 +13,109 @@ import (
 
 var anyCtx any = mock.Anything
 
-type MockMovements struct {
+type MockRepository struct {
 	mock.Mock
 }
 
-func newMockMovements(t *testing.T) *MockMovements {
+func newMockRepository(t *testing.T) *MockRepository {
 	t.Helper()
-	m := &MockMovements{}
+	m := &MockRepository{}
 	m.Test(t)
 	t.Cleanup(func() { m.AssertExpectations(t) })
 	return m
 }
 
-func (m *MockMovements) Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error) {
+func (m *MockRepository) Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error) {
 	args := m.Called(ctx, movements)
 	return args.Get(0).(domain.ImportResult), args.Error(1)
 }
 
-func (m *MockMovements) Months(ctx context.Context) ([]domain.MonthSummary, error) {
+func (m *MockRepository) Months(ctx context.Context) ([]domain.MonthSummary, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]domain.MonthSummary), args.Error(1)
 }
 
-func (m *MockMovements) ListByMonth(ctx context.Context, month string) ([]domain.Movement, error) {
+func (m *MockRepository) ListByMonth(ctx context.Context, month string) ([]domain.Movement, error) {
 	args := m.Called(ctx, month)
 	return args.Get(0).([]domain.Movement), args.Error(1)
 }
 
-func (m *MockMovements) Totals(ctx context.Context) ([]domain.CategoryTotal, error) {
+func (m *MockRepository) Totals(ctx context.Context) ([]domain.CategoryTotal, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]domain.CategoryTotal), args.Error(1)
 }
 
-func (m *MockMovements) Find(ctx context.Context, id int64) (domain.Movement, error) {
+func (m *MockRepository) Find(ctx context.Context, id int64) (domain.Movement, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockMovements) Create(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
+func (m *MockRepository) Create(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
 	args := m.Called(ctx, movement)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockMovements) Update(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
+func (m *MockRepository) Update(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
 	args := m.Called(ctx, movement)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockMovements) SetDeleted(ctx context.Context, id int64, deleted bool) error {
+func (m *MockRepository) SetDeleted(ctx context.Context, id int64, deleted bool) error {
 	args := m.Called(ctx, id, deleted)
 	return args.Error(0)
 }
 
-func (m *MockMovements) Recategorise(ctx context.Context, merchantKey, category string) (int, error) {
+func (m *MockRepository) Recategorise(ctx context.Context, merchantKey, category string) (int, error) {
 	args := m.Called(ctx, merchantKey, category)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockMovements) MerchantRules(ctx context.Context) (map[string]string, error) {
+func (m *MockRepository) MerchantRules(ctx context.Context) (map[string]string, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(map[string]string), args.Error(1)
 }
 
-type MockCategories struct {
-	mock.Mock
-}
-
-func newMockCategories(t *testing.T) *MockCategories {
-	t.Helper()
-	m := &MockCategories{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockCategories) List(ctx context.Context) ([]domain.Category, error) {
+func (m *MockRepository) List(ctx context.Context) ([]domain.Category, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]domain.Category), args.Error(1)
 }
 
-func (m *MockCategories) Ensure(ctx context.Context, categories []domain.Category) error {
+func (m *MockRepository) Ensure(ctx context.Context, categories []domain.Category) error {
 	args := m.Called(ctx, categories)
 	return args.Error(0)
 }
 
-type MockUsers struct {
-	mock.Mock
-}
-
-func newMockUsers(t *testing.T) *MockUsers {
-	t.Helper()
-	m := &MockUsers{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockUsers) FindByUsername(ctx context.Context, username string) (domain.User, error) {
+func (m *MockRepository) FindByUsername(ctx context.Context, username string) (domain.User, error) {
 	args := m.Called(ctx, username)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockUsers) FindUser(ctx context.Context, id int64) (domain.User, error) {
+func (m *MockRepository) FindUser(ctx context.Context, id int64) (domain.User, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockUsers) HasUsers(ctx context.Context) (bool, error) {
+func (m *MockRepository) HasUsers(ctx context.Context) (bool, error) {
 	args := m.Called(ctx)
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockUsers) CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error) {
+func (m *MockRepository) CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error) {
 	args := m.Called(ctx, username, passwordHash)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-type MockSessions struct {
-	mock.Mock
-}
-
-func newMockSessions(t *testing.T) *MockSessions {
-	t.Helper()
-	m := &MockSessions{}
-	m.Test(t)
-	t.Cleanup(func() { m.AssertExpectations(t) })
-	return m
-}
-
-func (m *MockSessions) CreateSession(ctx context.Context, session domain.Session) error {
+func (m *MockRepository) CreateSession(ctx context.Context, session domain.Session) error {
 	args := m.Called(ctx, session)
 	return args.Error(0)
 }
 
-func (m *MockSessions) FindSession(ctx context.Context, tokenHash string) (domain.Session, error) {
+func (m *MockRepository) FindSession(ctx context.Context, tokenHash string) (domain.Session, error) {
 	args := m.Called(ctx, tokenHash)
 	return args.Get(0).(domain.Session), args.Error(1)
 }
 
-func (m *MockSessions) DeleteSession(ctx context.Context, tokenHash string) error {
+func (m *MockRepository) DeleteSession(ctx context.Context, tokenHash string) error {
 	args := m.Called(ctx, tokenHash)
 	return args.Error(0)
 }
@@ -168,13 +132,13 @@ func newMockPasswords(t *testing.T) *MockPasswords {
 	return m
 }
 
-func (m *MockPasswords) Hash(ctx context.Context, plain string) (string, error) {
-	args := m.Called(ctx, plain)
+func (m *MockPasswords) Hash(plain string) (string, error) {
+	args := m.Called(plain)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockPasswords) Matches(ctx context.Context, hash, plain string) (bool, error) {
-	args := m.Called(ctx, hash, plain)
+func (m *MockPasswords) Matches(hash, plain string) (bool, error) {
+	args := m.Called(hash, plain)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -190,8 +154,8 @@ func newMockTokens(t *testing.T) *MockTokens {
 	return m
 }
 
-func (m *MockTokens) New(ctx context.Context) (string, error) {
-	args := m.Called(ctx)
+func (m *MockTokens) New() (string, error) {
+	args := m.Called()
 	return args.String(0), args.Error(1)
 }
 
@@ -213,30 +177,29 @@ func (m *MockClock) Now() time.Time {
 }
 
 type mocks struct {
-	movements  *MockMovements
-	categories *MockCategories
-	users      *MockUsers
-	sessions   *MockSessions
-	passwords  *MockPasswords
-	tokens     *MockTokens
-	clock      *MockClock
+	repo      *MockRepository
+	passwords *MockPasswords
+	tokens    *MockTokens
+	clock     *MockClock
 }
 
 func newMocks(t *testing.T) mocks {
 	t.Helper()
 	return mocks{
-		movements:  newMockMovements(t),
-		categories: newMockCategories(t),
-		users:      newMockUsers(t),
-		sessions:   newMockSessions(t),
-		passwords:  newMockPasswords(t),
-		tokens:     newMockTokens(t),
-		clock:      newMockClock(t),
+		repo:      newMockRepository(t),
+		passwords: newMockPasswords(t),
+		tokens:    newMockTokens(t),
+		clock:     newMockClock(t),
 	}
 }
 
 func (m mocks) app(sessionTTL time.Duration) *Application {
-	return New(m.movements, m.categories, m.users, m.sessions, m.passwords, m.tokens, m.clock, sessionTTL)
+	a := New(m.repo, sessionTTL)
+	a.now = m.clock.Now
+	a.newToken = m.tokens.New
+	a.hashPassword = m.passwords.Hash
+	a.passwordMatches = m.passwords.Matches
+	return a
 }
 
 func day(y int, mo time.Month, d int) time.Time {

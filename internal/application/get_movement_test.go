@@ -21,14 +21,14 @@ func TestApplication_GetMovement(t *testing.T) {
 		{
 			name: "returns the movement",
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(3)).Return(domain.Movement{ID: 3, Merchant: "Éxito"}, nil)
+				m.repo.On("Find", anyCtx, int64(3)).Return(domain.Movement{ID: 3, Merchant: "Éxito"}, nil)
 			},
 			want: domain.Movement{ID: 3, Merchant: "Éxito"},
 		},
 		{
 			name: "returns not found",
 			setupMocks: func(m mocks) {
-				m.movements.On("Find", anyCtx, int64(3)).Return(domain.Movement{}, domain.ErrNotFound)
+				m.repo.On("Find", anyCtx, int64(3)).Return(domain.Movement{}, domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotFound,
 		},

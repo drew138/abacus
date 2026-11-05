@@ -9,15 +9,15 @@ import (
 )
 
 func (a *Application) Trends(ctx context.Context) (domain.Trends, error) {
-	categories, err := a.categories.List(ctx)
+	categories, err := a.repo.List(ctx)
 	if err != nil {
 		return domain.Trends{}, fmt.Errorf("listing categories: %w", err)
 	}
-	months, err := a.movements.Months(ctx)
+	months, err := a.repo.Months(ctx)
 	if err != nil {
 		return domain.Trends{}, fmt.Errorf("listing months: %w", err)
 	}
-	totals, err := a.movements.Totals(ctx)
+	totals, err := a.repo.Totals(ctx)
 	if err != nil {
 		return domain.Trends{}, fmt.Errorf("totalling months: %w", err)
 	}

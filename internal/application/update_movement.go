@@ -8,12 +8,12 @@ import (
 )
 
 func (a *Application) UpdateMovement(ctx context.Context, movement domain.Movement, applyToMerchant bool) (domain.Movement, error) {
-	current, err := a.movements.Find(ctx, movement.ID)
+	current, err := a.repo.Find(ctx, movement.ID)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("finding movement %d: %w", movement.ID, err)
 	}
 
-	categories, err := a.categories.List(ctx)
+	categories, err := a.repo.List(ctx)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("listing categories: %w", err)
 	}
@@ -27,13 +27,13 @@ func (a *Application) UpdateMovement(ctx context.Context, movement domain.Moveme
 	movement.Deleted = current.Deleted
 	movement.Edited = current.Source == domain.SourceStatement
 
-	saved, err := a.movements.Update(ctx, movement)
+	saved, err := a.repo.Update(ctx, movement)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("saving movement %d: %w", movement.ID, err)
 	}
 
 	if applyToMerchant {
-		if _, err := a.movements.Recategorise(ctx, saved.MerchantKey(), saved.Category); err != nil {
+		if _, err := a.repo.Recategorise(ctx, saved.MerchantKey(), saved.Category); err != nil {
 			return domain.Movement{}, fmt.Errorf("recategorising the merchant of movement %d: %w", saved.ID, err)
 		}
 	}

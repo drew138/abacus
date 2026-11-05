@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) CreateMovement(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
-	categories, err := a.categories.List(ctx)
+	categories, err := a.repo.List(ctx)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("listing categories: %w", err)
 	}
@@ -22,7 +22,7 @@ func (a *Application) CreateMovement(ctx context.Context, movement domain.Moveme
 	movement.Edited = false
 	movement.Deleted = false
 
-	saved, err := a.movements.Create(ctx, movement)
+	saved, err := a.repo.Create(ctx, movement)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("saving movement: %w", err)
 	}

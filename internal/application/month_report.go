@@ -10,19 +10,19 @@ import (
 )
 
 func (a *Application) MonthReport(ctx context.Context, month string, filter domain.ExpenseFilter) (domain.MonthReport, error) {
-	categories, err := a.categories.List(ctx)
+	categories, err := a.repo.List(ctx)
 	if err != nil {
 		return domain.MonthReport{}, fmt.Errorf("listing categories: %w", err)
 	}
-	months, err := a.movements.Months(ctx)
+	months, err := a.repo.Months(ctx)
 	if err != nil {
 		return domain.MonthReport{}, fmt.Errorf("listing months: %w", err)
 	}
-	totals, err := a.movements.Totals(ctx)
+	totals, err := a.repo.Totals(ctx)
 	if err != nil {
 		return domain.MonthReport{}, fmt.Errorf("totalling months: %w", err)
 	}
-	movements, err := a.movements.ListByMonth(ctx, month)
+	movements, err := a.repo.ListByMonth(ctx, month)
 	if err != nil {
 		return domain.MonthReport{}, fmt.Errorf("listing movements for %s: %w", month, err)
 	}

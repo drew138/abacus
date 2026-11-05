@@ -17,10 +17,7 @@ import (
 	"github.com/drew138/abacus/internal/application"
 	"github.com/drew138/abacus/internal/infrastructure/api/htmx"
 	"github.com/drew138/abacus/internal/infrastructure/api/rest"
-	"github.com/drew138/abacus/internal/infrastructure/clock/system"
-	"github.com/drew138/abacus/internal/infrastructure/password/bcrypt"
 	"github.com/drew138/abacus/internal/infrastructure/repository/sqlite"
-	"github.com/drew138/abacus/internal/infrastructure/token/random"
 )
 
 func main() {
@@ -49,8 +46,7 @@ func run() error {
 		return fmt.Errorf("reaching database: %w", err)
 	}
 
-	repo := sqlite.New(db)
-	app := application.New(repo, repo, repo, repo, bcrypt.New(), random.New(), system.New(), cfg.sessionTTL)
+	app := application.New(sqlite.New(db), cfg.sessionTTL)
 	router := chi.NewRouter()
 	rest.New(router, app, cfg.importToken, cfg.maxBodyBytes)
 	if _, err := htmx.New(router, app, cfg.secureCookie); err != nil {

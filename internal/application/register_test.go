@@ -23,9 +23,9 @@ func TestApplication_Register(t *testing.T) {
 			name:     "creates the first user and clears the hash",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", anyCtx, "correct horse battery").Return("hash", nil)
-				m.users.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{ID: 1, Username: "andres", PasswordHash: "hash"}, nil)
+				m.repo.On("HasUsers", anyCtx).Return(false, nil)
+				m.passwords.On("Hash", "correct horse battery").Return("hash", nil)
+				m.repo.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{ID: 1, Username: "andres", PasswordHash: "hash"}, nil)
 			},
 			want: domain.User{ID: 1, Username: "andres"},
 		},
@@ -33,7 +33,7 @@ func TestApplication_Register(t *testing.T) {
 			name:     "refuses once a user exists",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(true, nil)
+				m.repo.On("HasUsers", anyCtx).Return(true, nil)
 			},
 			wantErr: domain.ErrRegistrationClosed,
 		},
@@ -41,7 +41,7 @@ func TestApplication_Register(t *testing.T) {
 			name:     "rejects a password shorter than twelve characters",
 			password: "short pass",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, nil)
+				m.repo.On("HasUsers", anyCtx).Return(false, nil)
 			},
 			wantErr: domain.ErrPasswordTooShort,
 		},
@@ -49,9 +49,9 @@ func TestApplication_Register(t *testing.T) {
 			name:     "returns closed when another registration won the race",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", anyCtx, "correct horse battery").Return("hash", nil)
-				m.users.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{}, domain.ErrRegistrationClosed)
+				m.repo.On("HasUsers", anyCtx).Return(false, nil)
+				m.passwords.On("Hash", "correct horse battery").Return("hash", nil)
+				m.repo.On("CreateFirstUser", anyCtx, "andres", "hash").Return(domain.User{}, domain.ErrRegistrationClosed)
 			},
 			wantErr: domain.ErrRegistrationClosed,
 		},
@@ -59,7 +59,7 @@ func TestApplication_Register(t *testing.T) {
 			name:     "returns the error when users cannot be counted",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, errStore)
+				m.repo.On("HasUsers", anyCtx).Return(false, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -67,8 +67,8 @@ func TestApplication_Register(t *testing.T) {
 			name:     "returns the error when hashing fails",
 			password: "correct horse battery",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, nil)
-				m.passwords.On("Hash", anyCtx, "correct horse battery").Return("", domain.ErrInternal)
+				m.repo.On("HasUsers", anyCtx).Return(false, nil)
+				m.passwords.On("Hash", "correct horse battery").Return("", domain.ErrInternal)
 			},
 			wantErr: domain.ErrInternal,
 		},

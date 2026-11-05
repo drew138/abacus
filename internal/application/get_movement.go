@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) GetMovement(ctx context.Context, id int64) (domain.Movement, error) {
-	movement, err := a.movements.Find(ctx, id)
+	movement, err := a.repo.Find(ctx, id)
 	if err != nil {
 		return domain.Movement{}, fmt.Errorf("finding movement %d: %w", id, err)
 	}

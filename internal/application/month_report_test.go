@@ -54,10 +54,10 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "orders savings, food, the rest by amount and other last, with last month's figures",
 			month: "2026-10",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return(totals, nil)
-				m.movements.On("ListByMonth", anyCtx, "2026-10").Return(movements, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return(totals, nil)
+				m.repo.On("ListByMonth", anyCtx, "2026-10").Return(movements, nil)
 			},
 			want: domain.MonthReport{
 				Month:       "2026-10",
@@ -90,10 +90,10 @@ func TestApplication_MonthReport(t *testing.T) {
 			month:  "2026-10",
 			filter: domain.ExpenseFilter{Category: domain.GroupFood, Search: " RAP "},
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months[1:], nil)
-				m.movements.On("Totals", anyCtx).Return(totals[3:], nil)
-				m.movements.On("ListByMonth", anyCtx, "2026-10").Return(movements, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months[1:], nil)
+				m.repo.On("Totals", anyCtx).Return(totals[3:], nil)
+				m.repo.On("ListByMonth", anyCtx, "2026-10").Return(movements, nil)
 			},
 			want: domain.MonthReport{
 				Month:   "2026-10",
@@ -115,10 +115,10 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "returns an empty report for a month with no data",
 			month: "2026-12",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return(totals, nil)
-				m.movements.On("ListByMonth", anyCtx, "2026-12").Return([]domain.Movement{}, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return(totals, nil)
+				m.repo.On("ListByMonth", anyCtx, "2026-12").Return([]domain.Movement{}, nil)
 			},
 			want: domain.MonthReport{Month: "2026-12", Summary: domain.MonthSummary{Month: "2026-12"}, Groups: []domain.GroupTotal{}, Expenses: []domain.ExpenseGroup{}},
 		},
@@ -126,7 +126,7 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "returns the error when categories cannot be listed",
 			month: "2026-10",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return([]domain.Category(nil), errStore)
+				m.repo.On("List", anyCtx).Return([]domain.Category(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -134,8 +134,8 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "returns the error when months cannot be listed",
 			month: "2026-10",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -143,9 +143,9 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "returns the error when totals cannot be read",
 			month: "2026-10",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return([]domain.CategoryTotal(nil), errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return([]domain.CategoryTotal(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -153,10 +153,10 @@ func TestApplication_MonthReport(t *testing.T) {
 			name:  "returns the error when movements cannot be listed",
 			month: "2026-10",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return(totals, nil)
-				m.movements.On("ListByMonth", anyCtx, "2026-10").Return([]domain.Movement(nil), errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return(totals, nil)
+				m.repo.On("ListByMonth", anyCtx, "2026-10").Return([]domain.Movement(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

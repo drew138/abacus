@@ -21,21 +21,21 @@ func TestApplication_RegistrationOpen(t *testing.T) {
 		{
 			name: "open while there are no users",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, nil)
+				m.repo.On("HasUsers", anyCtx).Return(false, nil)
 			},
 			want: true,
 		},
 		{
 			name: "closed once a user exists",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(true, nil)
+				m.repo.On("HasUsers", anyCtx).Return(true, nil)
 			},
 			want: false,
 		},
 		{
 			name: "returns the error",
 			setupMocks: func(m mocks) {
-				m.users.On("HasUsers", anyCtx).Return(false, errStore)
+				m.repo.On("HasUsers", anyCtx).Return(false, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/drew138/abacus/internal/domain"
+	"github.com/drew138/abacus/pkg/password"
+	"github.com/drew138/abacus/pkg/token"
 )
 
-type Movements interface {
+type Repository interface {
 	Import(ctx context.Context, movements []domain.Movement) (domain.ImportResult, error)
 	Months(ctx context.Context) ([]domain.MonthSummary, error)
 	ListByMonth(ctx context.Context, month string) ([]domain.Movement, error)
@@ -18,50 +20,33 @@ type Movements interface {
 	SetDeleted(ctx context.Context, id int64, deleted bool) error
 	Recategorise(ctx context.Context, merchantKey, category string) (int, error)
 	MerchantRules(ctx context.Context) (map[string]string, error)
-}
-
-type Categories interface {
 	List(ctx context.Context) ([]domain.Category, error)
 	Ensure(ctx context.Context, categories []domain.Category) error
-}
-
-type Users interface {
 	FindByUsername(ctx context.Context, username string) (domain.User, error)
 	FindUser(ctx context.Context, id int64) (domain.User, error)
 	HasUsers(ctx context.Context) (bool, error)
 	CreateFirstUser(ctx context.Context, username, passwordHash string) (domain.User, error)
-}
-
-type Sessions interface {
 	CreateSession(ctx context.Context, session domain.Session) error
 	FindSession(ctx context.Context, tokenHash string) (domain.Session, error)
 	DeleteSession(ctx context.Context, tokenHash string) error
 }
 
-type Passwords interface {
-	Hash(ctx context.Context, plain string) (string, error)
-	Matches(ctx context.Context, hash, plain string) (bool, error)
-}
-
-type Tokens interface {
-	New(ctx context.Context) (string, error)
-}
-
-type Clock interface {
-	Now() time.Time
-}
-
 type Application struct {
-	movements  Movements
-	categories Categories
-	users      Users
-	sessions   Sessions
-	passwords  Passwords
-	tokens     Tokens
-	clock      Clock
-	sessionTTL time.Duration
+	repo            Repository
+	sessionTTL      time.Duration
+	now             func() time.Time
+	newToken        func() (string, error)
+	hashPassword    func(plain string) (string, error)
+	passwordMatches func(hash, plain string) (bool, error)
 }
 
-func New(movements Movements, categories Categories, users Users, sessions Sessions, passwords Passwords, tokens Tokens, clock Clock, sessionTTL time.Duration) *Application {
-	return &Application{movements: movements, categories: categories, users: users, sessions: sessions, passwords: passwords, tokens: tokens, clock: clock, sessionTTL: sessionTTL}
+func New(repo Repository, sessionTTL time.Duration) *Application {
+	return &Application{
+		repo:            repo,
+		sessionTTL:      sessionTTL,
+		now:             time.Now,
+		newToken:        token.New,
+		hashPassword:    password.Hash,
+		passwordMatches: password.Matches,
+	}
 }

@@ -14,18 +14,18 @@ func (a *Application) Authenticate(ctx context.Context, raw string) (domain.User
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
-	session, err := a.sessions.FindSession(ctx, token.Hash(raw))
+	session, err := a.repo.FindSession(ctx, token.Hash(raw))
 	if errors.Is(err, domain.ErrNotFound) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 	if err != nil {
 		return domain.User{}, fmt.Errorf("finding session: %w", err)
 	}
-	if session.Expired(a.clock.Now()) {
+	if session.Expired(a.now()) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}
 
-	user, err := a.users.FindUser(ctx, session.UserID)
+	user, err := a.repo.FindUser(ctx, session.UserID)
 	if errors.Is(err, domain.ErrNotFound) {
 		return domain.User{}, domain.ErrNotAuthenticated
 	}

@@ -10,7 +10,7 @@ import (
 const minRegisterPasswordLength = 12
 
 func (a *Application) Register(ctx context.Context, username, plain string) (domain.User, error) {
-	taken, err := a.users.HasUsers(ctx)
+	taken, err := a.repo.HasUsers(ctx)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("checking for users: %w", err)
 	}
@@ -19,12 +19,12 @@ func (a *Application) Register(ctx context.Context, username, plain string) (dom
 		return domain.User{}, err
 	}
 
-	hash, err := a.passwords.Hash(ctx, plain)
+	hash, err := a.hashPassword(plain)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("hashing password: %w", err)
+		return domain.User{}, fmt.Errorf("hashing password: %w: %w", domain.ErrInternal, err)
 	}
 
-	user, err := a.users.CreateFirstUser(ctx, username, hash)
+	user, err := a.repo.CreateFirstUser(ctx, username, hash)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("creating the first user: %w", err)
 	}

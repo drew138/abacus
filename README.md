@@ -35,10 +35,14 @@ The image holds one binary, `/abacus`, which serves the web app and the import A
 
 ## Layout
 
-Ports and adapters: `internal/domain` (models, rules such as the Savings → Food → … →
-Other order), `internal/application` (use cases and the ports they need) and
-`internal/infrastructure` (SQLite, the htmx web interface, the JSON import API, bcrypt,
-random tokens, the clock).
+Ports and adapters:
+
+- `internal/domain`: models and rules, such as the Savings → Food → … → Other order.
+- `internal/application`: the use cases. Their one dependency is the `Repository` port.
+- `internal/infrastructure`: `api/htmx` (the web app), `api/rest` (the import endpoint) and
+  `repository/sqlite` (the only outbound adapter).
+- `pkg/`: in-process libraries the application calls directly: `password` (bcrypt) and
+  `token` (session tokens).
 
 ## Tests
 

@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) RecategoriseMerchant(ctx context.Context, merchant, category string) (int, error) {
-	categories, err := a.categories.List(ctx)
+	categories, err := a.repo.List(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("listing categories: %w", err)
 	}
@@ -17,7 +17,7 @@ func (a *Application) RecategoriseMerchant(ctx context.Context, merchant, catego
 		return 0, err
 	}
 
-	changed, err := a.movements.Recategorise(ctx, domain.MerchantKey(merchant), category)
+	changed, err := a.repo.Recategorise(ctx, domain.MerchantKey(merchant), category)
 	if err != nil {
 		return 0, fmt.Errorf("recategorising a merchant: %w", err)
 	}

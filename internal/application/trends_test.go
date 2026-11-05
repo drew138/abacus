@@ -30,9 +30,9 @@ func TestApplication_Trends(t *testing.T) {
 		{
 			name: "builds one row per group, ordered by tier then by the last month, without savings",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return([]domain.CategoryTotal{
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return([]domain.CategoryTotal{
 					{Month: "2026-09", Category: "Restaurants and cafés", Total: 100000},
 					{Month: "2026-09", Category: "Gaming", Total: 30000},
 					{Month: "2026-09", Category: "Gym and fitness", Total: 295000},
@@ -60,24 +60,24 @@ func TestApplication_Trends(t *testing.T) {
 		{
 			name: "returns the error when categories cannot be listed",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return([]domain.Category(nil), errStore)
+				m.repo.On("List", anyCtx).Return([]domain.Category(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
 		{
 			name: "returns the error when months cannot be listed",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return([]domain.MonthSummary(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
 		{
 			name: "returns the error when totals cannot be read",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Months", anyCtx).Return(months, nil)
-				m.movements.On("Totals", anyCtx).Return([]domain.CategoryTotal(nil), errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Months", anyCtx).Return(months, nil)
+				m.repo.On("Totals", anyCtx).Return([]domain.CategoryTotal(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

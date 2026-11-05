@@ -21,14 +21,14 @@ func TestApplication_DeleteMovement(t *testing.T) {
 			name: "marks the movement deleted",
 			id:   7,
 			setupMocks: func(m mocks) {
-				m.movements.On("SetDeleted", anyCtx, int64(7), true).Return(nil)
+				m.repo.On("SetDeleted", anyCtx, int64(7), true).Return(nil)
 			},
 		},
 		{
 			name: "returns not found",
 			id:   8,
 			setupMocks: func(m mocks) {
-				m.movements.On("SetDeleted", anyCtx, int64(8), true).Return(domain.ErrNotFound)
+				m.repo.On("SetDeleted", anyCtx, int64(8), true).Return(domain.ErrNotFound)
 			},
 			wantErr: domain.ErrNotFound,
 		},

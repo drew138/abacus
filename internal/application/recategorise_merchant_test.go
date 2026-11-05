@@ -26,8 +26,8 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			merchant: "  UBER   Rides",
 			category: "Other",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Recategorise", anyCtx, "uber rides", "Other").Return(16, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Recategorise", anyCtx, "uber rides", "Other").Return(16, nil)
 			},
 			want: 16,
 		},
@@ -36,7 +36,7 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			merchant: "Uber",
 			category: domain.CategorySavings,
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 			},
 			wantErr: domain.ErrUnknownCategory,
 		},
@@ -45,7 +45,7 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			merchant: "Uber",
 			category: "Nope",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("List", anyCtx).Return(categories, nil)
 			},
 			wantErr: domain.ErrUnknownCategory,
 		},
@@ -54,7 +54,7 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			merchant: "Uber",
 			category: "Other",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return([]domain.Category(nil), errStore)
+				m.repo.On("List", anyCtx).Return([]domain.Category(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
@@ -63,8 +63,8 @@ func TestApplication_RecategoriseMerchant(t *testing.T) {
 			merchant: "Uber",
 			category: "Other",
 			setupMocks: func(m mocks) {
-				m.categories.On("List", anyCtx).Return(categories, nil)
-				m.movements.On("Recategorise", anyCtx, "uber", "Other").Return(0, errStore)
+				m.repo.On("List", anyCtx).Return(categories, nil)
+				m.repo.On("Recategorise", anyCtx, "uber", "Other").Return(0, errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},
