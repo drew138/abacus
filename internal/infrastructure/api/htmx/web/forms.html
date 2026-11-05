@@ -1,0 +1,26 @@
+{{define "form"}}<div class="scrim" data-close>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <header><h3 id="mt">{{.Title}}</h3><button type="button" class="ibtn" data-close-btn aria-label="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></header>
+    <form {{if .ID}}hx-put="/movements/{{.ID}}"{{else}}hx-post="/movements"{{end}} novalidate>
+      {{if .Errors}}<div class="err-box" role="alert">{{range .Errors}}<p>{{.}}</p>{{end}}</div>{{end}}
+      <div class="fld"><label for="f-who">Merchant or person</label><input id="f-who" name="merchant" required maxlength="120" value="{{.Merchant}}" placeholder="e.g. Empanadas El Parque" autofocus></div>
+      <div class="row2">
+        <div class="fld"><label for="f-amt">Amount (COP)</label><input id="f-amt" name="amount" required inputmode="numeric" value="{{.Amount}}" placeholder="25.000"></div>
+        <div class="fld"><label for="f-date">Date</label><input id="f-date" name="date" type="date" required value="{{.Date}}" max="{{.MaxDate}}"></div>
+      </div>
+      <div class="fld"><label for="f-cat">Category</label><select id="f-cat" name="category"><button type="button"><selectedcontent></selectedcontent></button>{{range .Categories}}{{if .Label}}<optgroup label="{{.Label}}">{{range .Options}}{{template "option" .}}{{end}}</optgroup>{{else}}{{range .Options}}{{template "option" .}}{{end}}{{end}}{{end}}</select></div>
+      <div class="fld"><span class="lbl">Paid with</span><div class="seg" role="radiogroup" aria-label="Paid with">{{range .Methods}}<label>{{.Label}}<input type="radio" name="method" value="{{.Value}}"{{if .Selected}} checked{{end}}></label>{{end}}</div></div>
+      <div class="fld"><label for="f-note">Note (optional)</label><input id="f-note" name="note" maxlength="200" value="{{.Note}}" placeholder="Anything to remember"></div>
+      {{if .FromStatement}}<label class="chk"><input type="checkbox" name="apply_to_merchant"> <span>Use this category for every {{.Merchant}} movement, now and in future statements</span></label>
+      <p class="hint" style="margin:0">From the Nu statement. Your edits are kept when the statement is read again.</p>{{end}}
+      <div class="foot">{{if .ID}}<button type="button" class="btn danger" hx-delete="/movements/{{.ID}}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5"/></svg>Delete</button><span class="grow"></span>{{end}}<button type="button" class="btn" data-close-btn>Cancel</button><button class="btn primary" type="submit">{{if .ID}}Save changes{{else}}Add movement{{end}}</button></div>
+    </form>
+  </div>
+</div>{{end}}
+
+{{define "option"}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}><span class="dot" style="background:{{.Color}}" aria-hidden="true"></span><span>{{.Label}}</span></option>{{end}}
+
+{{define "menu"}}<div class="ph">Move every {{.Merchant}} movement to</div>
+<form hx-post="/merchant-rules"><input type="hidden" name="merchant" value="{{.Merchant}}"><input type="hidden" name="month" value="{{.Month}}">
+{{range .Options}}<button name="category" value="{{.Name}}"><span class="dot" style="background:{{.Color}}"></span>{{.Name}}{{if .Current}} ✓{{end}}</button>{{end}}
+</form>{{end}}

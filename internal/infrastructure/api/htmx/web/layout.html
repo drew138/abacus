@@ -1,0 +1,67 @@
+{{define "head"}}<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Onest:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{{asset "app.css"}}">{{end}}
+
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head"}}
+<title>{{.Title}} · Abacus</title>
+<script src="{{asset "htmx.min.js"}}" defer></script>
+<script src="{{asset "app.js"}}" defer></script>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Abacus">
+    <a href="/" aria-label="Abacus"><img class="logo" src="/logo.svg" alt=""></a>
+    <form class="outf" method="post" action="/logout"><button class="out" title="Sign out" aria-label="Sign out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3H3.5v10H6M10 5l3 3-3 3M13 8H6"/></svg></button></form>
+  </nav>
+  {{template "sidebar" .Sidebar}}
+  <main class="main" id="main">{{template "main" .}}</main>
+</div>
+<div class="pop" id="pop"></div>
+<div id="modal"></div>
+<div id="toast-area">{{with .Toast}}{{template "toast" .}}{{end}}</div>
+</body>
+</html>{{end}}
+
+{{define "swap"}}<title>{{.Title}} · Abacus</title>{{template "main" .}}{{template "sidebar-oob" .Sidebar}}{{if .CloseModal}}<div id="modal" hx-swap-oob="innerHTML"></div>{{end}}{{with .Toast}}<div id="toast-area" hx-swap-oob="innerHTML">{{template "toast" .}}</div>{{end}}{{end}}
+
+{{define "main"}}{{if .Month}}{{template "month" .Month}}{{else if .Trends}}{{template "trends" .Trends}}{{end}}{{end}}
+
+{{define "ctrls"}}<div class="ctrls">
+  <form method="post" action="/logout"><button class="btn out-m">Sign out</button></form>
+  <button class="btn primary" hx-get="/movements/new{{if .}}?month={{.}}{{end}}" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>Add movement</button>
+</div>{{end}}
+
+{{define "sidebar"}}<aside class="side" id="side" aria-label="Months">{{template "sidebar-items" .}}</aside>{{end}}
+{{define "sidebar-oob"}}<aside class="side" id="side" aria-label="Months" hx-swap-oob="true">{{template "sidebar-items" .}}</aside>{{end}}
+{{define "sidebar-items"}}<div class="side-head"><b>Abacus</b><span>Nu · COP</span></div>
+<div class="sec"><a class="item{{if .Trends}} sel{{end}}" href="/trends" hx-get="/trends" hx-target="#main" hx-push-url="true"><span class="ic">▦</span><span class="nm">Month to month</span></a></div>
+<div class="sec"><div class="sec-t">Months</div>
+{{range .Months}}<a class="item{{if .Selected}} sel{{end}}" href="/months/{{.Key}}" hx-get="/months/{{.Key}}" hx-target="#main" hx-push-url="true"><span class="ic">◷</span><span class="nm">{{.Name}}</span>{{if .Latest}}<span class="badge">{{.Badge}}</span>{{else}}<span class="amt-s">{{.Amount}}</span>{{end}}</a>
+{{else}}<div class="sec-t" style="text-transform:none;letter-spacing:0">No months yet</div>{{end}}
+</div>{{end}}
+
+{{define "toast"}}<div class="toast" role="status"><span>{{.Message}}</span>{{if .UndoID}}<button hx-post="/movements/{{.UndoID}}/restore">Undo</button>{{end}}</div>{{end}}
+{{define "toast-oob"}}<div id="toast-area" hx-swap-oob="innerHTML">{{template "toast" .}}</div>{{end}}
+
+{{define "login"}}<!doctype html>
+<html lang="en">
+<head>
+{{template "head"}}
+<title>Sign in · Abacus</title>
+</head>
+<body class="login-page">
+<form class="lcard" method="post" action="/login">
+  <div class="lhead"><img src="/logo.svg" alt="" width="56" height="56"><b>Abacus</b><p>Sign in to see where the money went</p></div>
+  {{with .Error}}<div class="err-box" role="alert">{{.}}</div>{{end}}
+  <div class="fld"><label for="u">Username</label><input id="u" name="username" autocomplete="username" required autofocus value="{{.Username}}"></div>
+  <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="current-password" required></div>
+  <button class="btn primary lgo" type="submit">Sign in</button>
+  <div class="lfoot">Only reachable over Tailscale</div>
+</form>
+</body>
+</html>{{end}}

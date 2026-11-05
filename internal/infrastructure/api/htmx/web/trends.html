@@ -1,0 +1,31 @@
+{{define "trends"}}<header class="top">
+  <div><h1>Month to month</h1><div class="sub">{{.Subtitle}}</div></div>
+  {{template "ctrls" ""}}
+</header>
+<div class="content">
+{{if .Empty}}<div class="card empty"><b>No movements yet</b>They arrive from n8n after each Nu statement. You can also add one by hand with Add movement.</div>
+{{else}}
+  <div class="kpis">
+    <div class="card kpi"><div class="l">Moved to savings</div><div class="v" style="color:var(--down)">{{.Saved}}</div><div class="d note">{{.MonthsN}}</div></div>
+    <div class="card kpi"><div class="l">Average month</div><div class="v">{{.Average}}</div><div class="d note">spending, without savings</div></div>
+    <div class="card kpi"><div class="l">{{.LastName}} vs average</div><div class="v">{{.LastSpent}}</div><div class="d">{{if .LastDelta.Text}}<span class="{{.LastDelta.Class}}">{{.LastDelta.Text}}</span>{{end}}</div></div>
+  </div>
+  <div class="card"><h2>{{if .Only}}{{.Only}} by month{{else}}Spending by month{{end}}</h2>
+    <div class="cwrap"><div class="tbl-wrap"><svg viewBox="0 0 {{.Chart.Width}} {{.Chart.Height}}" width="100%" style="min-width:420px;display:block" role="img" aria-label="Monthly totals by category">
+      {{range .Chart.Grid}}<line class="gridl" x1="56" x2="634" y1="{{.Y}}" y2="{{.Y}}"/><text x="48" y="{{.Y}}" dy="4" text-anchor="end" style="font-size:11px">{{.Label}}</text>{{end}}
+      {{range .Chart.Columns}}{{range .Segments}}<rect class="bseg" data-k="{{.Key}}" data-m="{{.Month}}" data-v="{{.Value}}" data-s="{{.Share}}" data-d="{{.Delta.Text}}" data-dc="{{.Delta.Class}}" data-vs="{{.Vs}}" data-c="{{.Color}}" x="{{.X}}" y="{{.Y}}" width="{{.W}}" height="{{.H}}" rx="2" fill="{{.Color}}" hx-get="/trends{{if ne $.Only .Key}}?only={{.Key}}{{end}}" hx-target="#main"><desc>{{.Month}}: {{.Value}}</desc></rect>{{end}}<text x="{{.LabelX}}" y="{{.TopY}}" text-anchor="middle" style="font-size:11px;font-weight:600;fill:var(--fg)">{{.Total}}</text><text x="{{.LabelX}}" y="242" text-anchor="middle" style="font-size:12px">{{.Month}}</text>{{end}}
+    </svg></div><div class="ctip" id="ctip" aria-hidden="true"><div class="ctip-in"></div></div></div>
+    <div class="legend">{{range .Legend}}<button class="{{if .Off}}off{{end}}" hx-get="/trends{{if ne $.Only .Name}}?only={{.Name}}{{end}}" hx-target="#main"><span class="dot" style="background:{{.Color}}"></span>{{.Name}}</button>{{end}}</div>
+    <p class="note" style="margin:8px 0 0">Hover a bar to see its amount. Click a bar, a category in the legend or the table to see only that one, month by month. Click it again to see all.</p>
+  </div>
+  <div class="card"><h2>How each category moves</h2><div class="tbl-wrap"><table>
+    <thead><tr><th>Category</th>{{range .Months}}<th>{{.}}</th>{{end}}<th>Last change</th></tr></thead>
+    <tbody>
+      <tr class="savr"><td><span class="n"><span class="dot" style="background:{{.Savings.Color}}"></span>{{.Savings.Name}}</span></td>{{range .Savings.Cells}}<td>{{.}}</td>{{end}}<td>{{if .Savings.Delta.Text}}<span class="{{.Savings.Delta.Class}}">{{.Savings.Delta.Text}}</span>{{else}}–{{end}}</td></tr>
+      {{range .Rows}}<tr class="clk" hx-get="/trends{{if ne $.Only .Name}}?only={{.Name}}{{end}}" hx-target="#main"><td><span class="n"><span class="dot" style="background:{{.Color}}"></span>{{.Name}}</span></td>{{range .Cells}}<td>{{.}}</td>{{end}}<td>{{if .Delta.Text}}<span class="{{.Delta.Class}}">{{.Delta.Text}}</span>{{else}}–{{end}}</td></tr>
+        {{range .Subs}}<tr><td style="padding-left:28px;color:var(--muted)">{{.Name}}</td>{{range .Cells}}<td style="color:var(--muted)">{{.}}</td>{{end}}<td>{{if .Delta.Text}}<span class="{{.Delta.Class}}">{{.Delta.Text}}</span>{{else}}–{{end}}</td></tr>{{end}}
+      {{end}}
+      <tr><td><b>{{.Totals.Name}}</b></td>{{range .Totals.Cells}}<td><b>{{.}}</b></td>{{end}}<td>{{if .Totals.Delta.Text}}<span class="{{.Totals.Delta.Class}}">{{.Totals.Delta.Text}}</span>{{else}}–{{end}}</td></tr>
+    </tbody></table></div></div>
+{{end}}
+</div>{{end}}

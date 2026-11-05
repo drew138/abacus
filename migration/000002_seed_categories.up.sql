@@ -1,0 +1,16 @@
+INSERT INTO categories (name, parent, created_at) VALUES
+    ('Savings', NULL, '2026-11-04T00:00:00Z'),
+    ('Restaurants and cafés', 'Food and eating out', '2026-11-04T00:00:00Z'),
+    ('Food delivery', 'Food and eating out', '2026-11-04T00:00:00Z'),
+    ('Groceries', 'Food and eating out', '2026-11-04T00:00:00Z'),
+    ('Snacks and candy', 'Food and eating out', '2026-11-04T00:00:00Z'),
+    ('Transfers to people', 'Food and eating out', '2026-11-04T00:00:00Z'),
+    ('Rides and transport', NULL, '2026-11-04T00:00:00Z'),
+    ('Pharmacy and health', NULL, '2026-11-04T00:00:00Z'),
+    ('Gym and fitness', NULL, '2026-11-04T00:00:00Z'),
+    ('Online shopping', NULL, '2026-11-04T00:00:00Z'),
+    ('Travel', NULL, '2026-11-04T00:00:00Z'),
+    ('Phone, internet and subscriptions', NULL, '2026-11-04T00:00:00Z'),
+    ('Gaming', NULL, '2026-11-04T00:00:00Z'),
+    ('Entertainment', NULL, '2026-11-04T00:00:00Z'),
+    ('Other', NULL, '2026-11-04T00:00:00Z');

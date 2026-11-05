@@ -1,0 +1,39 @@
+{{define "month"}}<header class="top">
+  <div><h1>{{.Title}}</h1><div class="sub">{{.Spent}} spent · {{.Purchases}} purchases{{if .HasPrevious}}{{if .Delta.Text}} · <span class="{{.Delta.Class}}">{{.Delta.Text}}</span> vs {{.PreviousName}}{{end}}{{end}}</div></div>
+  {{template "ctrls" .Key}}
+</header>
+<div class="content">
+  <div class="grid2">
+    <div class="card"><h2>Where it went</h2>
+      <div class="donut-wrap">
+        <div class="dwrap"><svg class="donut" width="192" height="192" viewBox="-8 -8 208 208" role="img" aria-label="Spending by category">{{range .Donut.Slices}}<path class="sl" tabindex="0" data-k="{{.Key}}" data-n="{{.Name}}" data-v="{{.Short}}" data-p="{{.Share}}" data-c="{{.Color}}" style="--dx:{{.DX}};--dy:{{.DY}}" d="{{.Path}}" fill="{{.Color}}" hx-get="/months/{{$.Key}}/expenses?category={{.Filter}}" hx-target="#exp-list" hx-include="#q" data-scroll><desc>{{.Name}}: {{.Amount}}</desc></path>{{end}}</svg>
+          <div class="dcenter" aria-live="polite"><span id="dc1" data-d="{{.Donut.Total}}">{{.Donut.Total}}</span><b id="dc2" data-d="{{.Donut.Count}}">{{.Donut.Count}}</b><span id="dc3" data-d="purchases">purchases</span></div></div>
+        <div class="note" style="flex:1;min-width:140px">Hover a slice to see its amount and share. Click a slice or a category to jump to its expenses. The change figure compares with the month before.</div>
+      </div>
+    </div>
+    <div class="card"><h2>Moved to savings</h2>
+      <div class="sav"><div class="sav-tot">{{.SavingsTotal}}</div>{{range .Savings}}<div class="sav-row"><span>{{.Label}}</span><span>{{.Amount}}</span></div>{{else}}<p class="note">Nothing moved this month.</p>{{end}}</div>
+    </div>
+  </div>
+  <div class="card"><h2>By category</h2>
+    <div class="rank">{{range .Ranks}}<button class="rrow{{if .Sub}} sub{{end}}" data-hk="{{.Hover}}" hx-get="/months/{{$.Key}}/expenses?category={{.Filter}}" hx-target="#exp-list" hx-include="#q" data-scroll><div class="n"><span class="dot" style="background:{{.Color}}"></span><span>{{.Name}}</span></div><div class="a">{{.Amount}}</div><div class="bar"><i style="width:{{.Width}};background:{{.Color}}"></i></div><div class="meta"><span>{{.Share}}</span>{{if .Delta.Text}}<span class="{{.Delta.Class}}">{{.Delta.Text}}</span>{{end}}</div></button>
+    {{else}}<p class="note">No spending this month yet.</p>{{end}}</div>
+  </div>
+  <div class="card" id="exp">
+    <div class="feed-head"><h2>Every expense</h2><div class="ctrls"><input class="search" id="q" name="q" type="search" placeholder="Search a merchant or person" aria-label="Search movements" autocomplete="off" hx-get="/months/{{.Key}}/expenses" hx-trigger="input changed delay:250ms, search" hx-target="#exp-list" hx-include="#exp-filter"></div></div>
+    <div id="exp-list">{{template "expenses" .Expenses}}</div>
+  </div>
+</div>{{end}}
+
+{{define "expenses"}}<input type="hidden" id="exp-filter" name="category" value="{{.Filter}}">
+<p class="note" style="margin:0 0 4px">{{.Count}} movement{{if ne .Count 1}}s{{end}}, by category then by date. Savings first, Food and eating out second, Other last.{{if .Filter}} <button class="filter" hx-get="/months/{{.Month}}/expenses" hx-target="#exp-list" hx-include="#q">{{.Filter}} ✕</button>{{end}}</p>
+{{range .Groups}}<details class="grp" open><summary class="grp-h"><span class="car">▾</span><span class="sw" style="background:{{.Color}}"></span><span class="gn">{{.Category}}{{if .Parent}}<small>{{.Parent}}</small>{{end}}<small>{{.Count}}</small></span><span class="gt{{if .IsSavings}} save-t{{end}}">{{.Total}}</span></summary><div class="rows">{{range .Rows}}{{template "row" .}}{{end}}</div></details>
+{{end}}{{with .Empty}}<p class="note">{{.}}</p>{{end}}{{end}}
+
+{{define "row"}}<div class="mv{{if .IsSavings}} save{{end}}" id="mv-{{.ID}}"><div class="av" style="background:{{.Color}}">{{.Initial}}</div>
+  <div style="min-width:0"><div class="t"><span>{{.Merchant}}</span><small>{{.Day}}</small></div>
+  <div class="tags">{{if .IsSavings}}<span class="chip" style="cursor:default"><span class="dot" style="background:{{.Color}}"></span>Savings</span>{{else}}<button class="chip" title="Change category" hx-get="/movements/{{.ID}}/categories" hx-target="#pop" data-pop><span class="dot" style="background:{{.Color}}"></span>{{.Category}} ▾</button>{{end}}<span class="tag">{{.Method}}</span>{{if .Manual}}<span class="tag hand">Added by hand</span>{{end}}{{if .Edited}}<span class="tag ed">Edited</span>{{end}}{{with .Note}}<span class="note-t">{{.}}</span>{{end}}</div></div>
+  <div class="a">{{if .IsSavings}}→ {{end}}{{.Amount}}</div>
+  <div class="acts"><button class="ibtn" title="Edit" aria-label="Edit {{.Merchant}}" hx-get="/movements/{{.ID}}/edit" hx-target="#modal"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg></button><button class="ibtn del" title="Delete" aria-label="Delete {{.Merchant}}" hx-get="/movements/{{.ID}}/delete" hx-target="#mv-{{.ID}}" hx-swap="outerHTML"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5"/></svg></button></div>
+  {{if .Confirm}}<div class="confirm"><span>Delete {{.Merchant}}, {{.Amount}}? It is removed from this month's totals.</span><button class="btn" hx-get="/movements/{{.ID}}/row" hx-target="#mv-{{.ID}}" hx-swap="outerHTML">Keep</button><button class="btn danger solid" hx-delete="/movements/{{.ID}}">Delete</button></div>{{end}}
+</div>{{end}}
