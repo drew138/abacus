@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,11 +12,11 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rqlite/gorqlite"
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/drew138/abacus/internal/application"
 	"github.com/drew138/abacus/internal/infrastructure/api/rest"
-	"github.com/drew138/abacus/internal/infrastructure/repository/rqlite"
+	"github.com/drew138/abacus/internal/infrastructure/repository/postgres"
 )
 
 func main() {
@@ -35,16 +36,16 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
-	conn, err := gorqlite.Open(cfg.databaseURL)
+	db, err := sql.Open("pgx", cfg.databaseURL)
 	if err != nil {
+		return fmt.Errorf("opening database: %w", err)
+	}
+	defer db.Close()
+	if err := db.PingContext(ctx); err != nil {
 		return fmt.Errorf("reaching database: %w", err)
 	}
-	defer conn.Close()
-	if err := conn.SetExecutionWithTransaction(true); err != nil {
-		return fmt.Errorf("configuring database: %w", err)
-	}
 
-	app := application.New(rqlite.New(conn))
+	app := application.New(postgres.New(db))
 	router := chi.NewRouter()
 	if _, err := rest.New(router, app, cfg.importToken, cfg.secureCookie); err != nil {
 		return fmt.Errorf("building web interface: %w", err)

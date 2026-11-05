@@ -1,126 +1,126 @@
 package rest
 
 type getMonthPage struct {
-	Title   string
-	Sidebar getMonthSidebar
-	Month   getMonthView
+	Title   string          `json:"title"`
+	Sidebar getMonthSidebar `json:"sidebar"`
+	Month   getMonthView    `json:"month"`
 }
 
 type getMonthSidebar struct {
-	Trends bool
-	Months []getMonthSidebarItem
+	Trends bool                  `json:"trends"`
+	Months []getMonthSidebarItem `json:"months"`
 }
 
 type getMonthSidebarItem struct {
-	Key      string
-	Name     string
-	Badge    int
-	Amount   string
-	Latest   bool
-	Selected bool
+	Key      string `json:"key"`
+	Name     string `json:"name"`
+	Badge    int    `json:"badge"`
+	Amount   string `json:"amount"`
+	Latest   bool   `json:"latest"`
+	Selected bool   `json:"selected"`
 }
 
 type getMonthDelta struct {
-	Text  string
-	Class string
+	Text  string `json:"text"`
+	Class string `json:"class"`
 }
 
 type getMonthView struct {
-	Key          string
-	Title        string
-	Spent        string
-	Purchases    int
-	HasPrevious  bool
-	Delta        getMonthDelta
-	PreviousName string
-	Donut        getMonthDonut
-	Ranks        []getMonthRank
-	SavingsTotal string
-	Savings      []getMonthSaving
-	Expenses     getMonthExpenses
+	Key          string           `json:"key"`
+	Title        string           `json:"title"`
+	Spent        string           `json:"spent"`
+	Purchases    int              `json:"purchases"`
+	HasPrevious  bool             `json:"has_previous"`
+	Delta        getMonthDelta    `json:"delta"`
+	PreviousName string           `json:"previous_name"`
+	Donut        getMonthDonut    `json:"donut"`
+	Ranks        []getMonthRank   `json:"ranks"`
+	SavingsTotal string           `json:"savings_total"`
+	Savings      []getMonthSaving `json:"savings"`
+	Expenses     getMonthExpenses `json:"expenses"`
 }
 
 type getMonthDonut struct {
-	Slices []getMonthSlice
-	Total  string
-	Count  int
+	Slices []getMonthSlice `json:"slices"`
+	Total  string          `json:"total"`
+	Count  int             `json:"count"`
 }
 
 type getMonthSlice struct {
-	Key    string
-	Name   string
-	Color  string
-	Path   string
-	DX     string
-	DY     string
-	Short  string
-	Share  string
-	Filter string
-	Amount string
+	Key    string `json:"key"`
+	Name   string `json:"name"`
+	Color  string `json:"color"`
+	Path   string `json:"path"`
+	DX     string `json:"dx"`
+	DY     string `json:"dy"`
+	Short  string `json:"short"`
+	Share  string `json:"share"`
+	Filter string `json:"filter"`
+	Amount string `json:"amount"`
 }
 
 type getMonthRank struct {
-	Name   string
-	Color  string
-	Amount string
-	Width  string
-	Share  string
-	Delta  getMonthDelta
-	Sub    bool
-	Filter string
-	Hover  string
+	Name   string        `json:"name"`
+	Color  string        `json:"color"`
+	Amount string        `json:"amount"`
+	Width  string        `json:"width"`
+	Share  string        `json:"share"`
+	Delta  getMonthDelta `json:"delta"`
+	Sub    bool          `json:"sub"`
+	Filter string        `json:"filter"`
+	Hover  string        `json:"hover"`
 }
 
 type getMonthSaving struct {
-	Label  string
-	Amount string
+	Label  string `json:"label"`
+	Amount string `json:"amount"`
 }
 
 type getMonthExpenses struct {
-	Month  string
-	Count  int
-	Filter string
-	Search string
-	Groups []getMonthExpenseGroup
-	Empty  string
+	Month  string                 `json:"month"`
+	Count  int                    `json:"count"`
+	Filter string                 `json:"filter"`
+	Search string                 `json:"search"`
+	Groups []getMonthExpenseGroup `json:"groups"`
+	Empty  string                 `json:"empty"`
 }
 
 type getMonthExpenseGroup struct {
-	Category  string
-	Parent    string
-	Color     string
-	Count     int
-	Total     string
-	IsSavings bool
-	Rows      []getMonthRow
+	Category  string        `json:"category"`
+	Parent    string        `json:"parent"`
+	Color     string        `json:"color"`
+	Count     int           `json:"count"`
+	Total     string        `json:"total"`
+	IsSavings bool          `json:"is_savings"`
+	Rows      []getMonthRow `json:"rows"`
 }
 
 type getMonthRow struct {
-	ID        int64
-	Initial   string
-	Color     string
-	Merchant  string
-	Day       string
-	Category  string
-	IsSavings bool
-	Method    string
-	Manual    bool
-	Edited    bool
-	Note      string
-	Amount    string
-	Confirm   bool
-	Month     string
+	ID        int64  `json:"id"`
+	Initial   string `json:"initial"`
+	Color     string `json:"color"`
+	Merchant  string `json:"merchant"`
+	Day       string `json:"day"`
+	Category  string `json:"category"`
+	IsSavings bool   `json:"is_savings"`
+	Method    string `json:"method"`
+	Manual    bool   `json:"manual"`
+	Edited    bool   `json:"edited"`
+	Note      string `json:"note"`
+	Amount    string `json:"amount"`
+	Confirm   bool   `json:"confirm"`
+	Month     string `json:"month"`
 }
 
 type getMonthGroup struct {
-	Name          string
-	Total         int64
-	Previous      int64
-	Subcategories []getMonthAmount
+	Name          string           `json:"name"`
+	Total         int64            `json:"total"`
+	Previous      int64            `json:"previous"`
+	Subcategories []getMonthAmount `json:"subcategories"`
 }
 
 type getMonthAmount struct {
-	Name     string
-	Total    int64
-	Previous int64
+	Name     string `json:"name"`
+	Total    int64  `json:"total"`
+	Previous int64  `json:"previous"`
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (added, updated, kept int, err error) {
-	if err := a.repo.Ensure(ctx, categories); err != nil {
+	if err := a.repo.EnsureCategories(ctx, categories); err != nil {
 		return 0, 0, 0, fmt.Errorf("ensuring %d categories: %w", len(categories), err)
 	}
 
@@ -16,7 +16,7 @@ func (a *Application) ImportMovements(ctx context.Context, movements []domain.Mo
 		movements[i].Source = domain.SourceStatement
 	}
 
-	added, updated, kept, err = a.repo.Import(ctx, movements)
+	added, updated, kept, err = a.repo.ImportMovements(ctx, movements)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("importing %d movements: %w", len(movements), err)
 	}

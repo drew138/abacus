@@ -21,14 +21,14 @@ func TestApplication_ListCategories(t *testing.T) {
 		{
 			name: "returns the categories",
 			setupMocks: func(m mocks) {
-				m.repo.On("List", anyCtx).Return([]domain.Category{{Name: "Gaming"}}, nil)
+				m.repo.On("ListCategories", anyCtx).Return([]domain.Category{{Name: "Gaming"}}, nil)
 			},
 			want: []domain.Category{{Name: "Gaming"}},
 		},
 		{
 			name: "returns the error",
 			setupMocks: func(m mocks) {
-				m.repo.On("List", anyCtx).Return([]domain.Category(nil), errStore)
+				m.repo.On("ListCategories", anyCtx).Return([]domain.Category(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

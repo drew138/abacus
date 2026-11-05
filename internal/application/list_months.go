@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) ListMonths(ctx context.Context) ([]domain.MonthSummary, error) {
-	months, err := a.repo.Months(ctx)
+	months, err := a.repo.ListMonths(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("listing months: %w", err)
 	}

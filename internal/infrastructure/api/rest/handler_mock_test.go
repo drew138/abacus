@@ -41,7 +41,7 @@ func (m *MockApplication) ListMovements(ctx context.Context, month string) ([]do
 	return args.Get(0).([]domain.Movement), args.Error(1)
 }
 
-func (m *MockApplication) CategoryTotals(ctx context.Context) (map[string]map[string]int64, error) {
+func (m *MockApplication) ListCategoryTotals(ctx context.Context) (map[string]map[string]int64, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(map[string]map[string]int64), args.Error(1)
 }
@@ -81,27 +81,27 @@ func (m *MockApplication) RestoreMovement(ctx context.Context, id int64) error {
 	return args.Error(0)
 }
 
-func (m *MockApplication) Register(ctx context.Context, username, password string) (domain.User, error) {
+func (m *MockApplication) RegisterUser(ctx context.Context, username, password string) (domain.User, error) {
 	args := m.Called(ctx, username, password)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockApplication) RegistrationOpen(ctx context.Context) (bool, error) {
+func (m *MockApplication) CheckRegistration(ctx context.Context) (bool, error) {
 	args := m.Called(ctx)
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockApplication) LogIn(ctx context.Context, username, password string) (string, time.Time, error) {
+func (m *MockApplication) LogInUser(ctx context.Context, username, password string) (string, time.Time, error) {
 	args := m.Called(ctx, username, password)
 	return args.String(0), args.Get(1).(time.Time), args.Error(2)
 }
 
-func (m *MockApplication) Authenticate(ctx context.Context, token string) (domain.User, error) {
+func (m *MockApplication) AuthenticateUser(ctx context.Context, token string) (domain.User, error) {
 	args := m.Called(ctx, token)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockApplication) LogOut(ctx context.Context, token string) error {
+func (m *MockApplication) LogOutUser(ctx context.Context, token string) error {
 	args := m.Called(ctx, token)
 	return args.Error(0)
 }

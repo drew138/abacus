@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) ListMovements(ctx context.Context, month string) ([]domain.Movement, error) {
-	movements, err := a.repo.ListByMonth(ctx, month)
+	movements, err := a.repo.ListMovements(ctx, month)
 	if err != nil {
 		return nil, fmt.Errorf("listing movements for %s: %w", month, err)
 	}

@@ -78,7 +78,7 @@ var methodLabels = map[domain.Method]string{
 type Application interface {
 	ListMonths(ctx context.Context) ([]domain.MonthSummary, error)
 	ListMovements(ctx context.Context, month string) ([]domain.Movement, error)
-	CategoryTotals(ctx context.Context) (map[string]map[string]int64, error)
+	ListCategoryTotals(ctx context.Context) (map[string]map[string]int64, error)
 	ListCategories(ctx context.Context) ([]domain.Category, error)
 	GetMovement(ctx context.Context, id int64) (domain.Movement, error)
 	CreateMovement(ctx context.Context, movement domain.Movement) (domain.Movement, error)
@@ -86,11 +86,11 @@ type Application interface {
 	RecategoriseMerchant(ctx context.Context, merchant, category string) (int, error)
 	DeleteMovement(ctx context.Context, id int64) error
 	RestoreMovement(ctx context.Context, id int64) error
-	Register(ctx context.Context, username, password string) (domain.User, error)
-	RegistrationOpen(ctx context.Context) (bool, error)
-	LogIn(ctx context.Context, username, password string) (string, time.Time, error)
-	Authenticate(ctx context.Context, token string) (domain.User, error)
-	LogOut(ctx context.Context, token string) error
+	RegisterUser(ctx context.Context, username, password string) (domain.User, error)
+	CheckRegistration(ctx context.Context) (bool, error)
+	LogInUser(ctx context.Context, username, password string) (string, time.Time, error)
+	AuthenticateUser(ctx context.Context, token string) (domain.User, error)
+	LogOutUser(ctx context.Context, token string) error
 	ImportMovements(ctx context.Context, movements []domain.Movement, categories []domain.Category) (added, updated, kept int, err error)
 }
 
@@ -127,13 +127,13 @@ func New(router chi.Router, app Application, importToken string, secureCookie bo
 		zone:         time.FixedZone("America/Bogota", -5*60*60),
 	}
 
-	router.Get("/static/*", h.logged(h.getStatic))
+	router.Get("/static/*", h.logged(h.getStaticFile))
 	router.Get("/logo.svg", h.logged(h.getLogo))
-	router.Get("/login", h.logged(h.getLogin))
-	router.Post("/login", h.logged(h.sameOrigin(h.postLogin)))
-	router.Get("/register", h.logged(h.getRegister))
-	router.Post("/register", h.logged(h.sameOrigin(h.postRegister)))
-	router.Post("/logout", h.logged(h.sameOrigin(h.postLogout)))
+	router.Get("/login", h.logged(h.getLoginPage))
+	router.Post("/login", h.logged(h.sameOrigin(h.createSession)))
+	router.Get("/register", h.logged(h.getRegisterPage))
+	router.Post("/register", h.logged(h.sameOrigin(h.createUser)))
+	router.Post("/logout", h.logged(h.sameOrigin(h.deleteSession)))
 
 	router.Get("/", h.logged(h.authed(h.getIndex)))
 	router.Get("/months/{month}", h.logged(h.authed(h.getMonth)))
@@ -141,9 +141,9 @@ func New(router chi.Router, app Application, importToken string, secureCookie bo
 	router.Get("/trends", h.logged(h.authed(h.getTrends)))
 	router.Get("/movements/create-form", h.logged(h.authed(h.getCreateMovementForm)))
 	router.Get("/movements/{id}/update-form", h.logged(h.authed(h.getUpdateMovementForm)))
-	router.Get("/movements/{id}/row", h.logged(h.authed(h.getRow)))
-	router.Get("/movements/{id}/delete", h.logged(h.authed(h.confirmDelete)))
-	router.Get("/movements/{id}/categories", h.logged(h.authed(h.categoryMenu)))
+	router.Get("/movements/{id}/row", h.logged(h.authed(h.getMovementRow)))
+	router.Get("/movements/{id}/delete", h.logged(h.authed(h.getMovementDeletion)))
+	router.Get("/movements/{id}/categories", h.logged(h.authed(h.getCategoryMenu)))
 	router.Post("/movements", h.logged(h.sameOrigin(h.authed(h.createMovement))))
 	router.Put("/movements/{id}", h.logged(h.sameOrigin(h.authed(h.updateMovement))))
 	router.Delete("/movements/{id}", h.logged(h.sameOrigin(h.authed(h.deleteMovement))))
@@ -231,7 +231,7 @@ func isHTMX(r *http.Request) bool {
 
 func (h *Handler) authed(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := h.app.Authenticate(r.Context(), sessionToken(r))
+		_, err := h.app.AuthenticateUser(r.Context(), sessionToken(r))
 		switch {
 		case errors.Is(err, domain.ErrNotAuthenticated):
 			h.toLogin(w, r)

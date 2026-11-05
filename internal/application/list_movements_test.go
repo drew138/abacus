@@ -21,14 +21,14 @@ func TestApplication_ListMovements(t *testing.T) {
 		{
 			name: "returns the month's movements",
 			setupMocks: func(m mocks) {
-				m.repo.On("ListByMonth", anyCtx, "2026-10").Return([]domain.Movement{{ID: 1}}, nil)
+				m.repo.On("ListMovements", anyCtx, "2026-10").Return([]domain.Movement{{ID: 1}}, nil)
 			},
 			want: []domain.Movement{{ID: 1}},
 		},
 		{
 			name: "returns the error",
 			setupMocks: func(m mocks) {
-				m.repo.On("ListByMonth", anyCtx, "2026-10").Return([]domain.Movement(nil), errStore)
+				m.repo.On("ListMovements", anyCtx, "2026-10").Return([]domain.Movement(nil), errStore)
 			},
 			wantErr: domain.ErrUnavailable,
 		},

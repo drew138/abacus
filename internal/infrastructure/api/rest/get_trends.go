@@ -14,7 +14,7 @@ func (h *Handler) getTrends(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	totals, err := h.app.CategoryTotals(ctx)
+	totals, err := h.app.ListCategoryTotals(ctx)
 	if err != nil {
 		h.writeError(w, r, err)
 		return

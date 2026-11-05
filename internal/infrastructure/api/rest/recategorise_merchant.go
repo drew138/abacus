@@ -10,7 +10,7 @@ func (h *Handler) recategoriseMerchant(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, r, err)
 		return
 	}
-	req := RecategoriseForm{Merchant: r.PostForm.Get("merchant"), Category: r.PostForm.Get("category"), Month: r.PostForm.Get("month")}
+	req := RecategoriseMerchantRequest{Merchant: r.PostForm.Get("merchant"), Category: r.PostForm.Get("category"), Month: r.PostForm.Get("month")}
 	if err := h.validate.Struct(req); err != nil {
 		h.writeError(w, r, fmt.Errorf("%w: %w", errMalformedForm, err))
 		return

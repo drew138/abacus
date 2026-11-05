@@ -25,74 +25,79 @@ func newMockRepository(t *testing.T) *MockRepository {
 	return m
 }
 
-func (m *MockRepository) Import(ctx context.Context, movements []domain.Movement) (int, int, int, error) {
+func (m *MockRepository) ImportMovements(ctx context.Context, movements []domain.Movement) (int, int, int, error) {
 	args := m.Called(ctx, movements)
 	return args.Int(0), args.Int(1), args.Int(2), args.Error(3)
 }
 
-func (m *MockRepository) Months(ctx context.Context) ([]domain.MonthSummary, error) {
+func (m *MockRepository) ListMonths(ctx context.Context) ([]domain.MonthSummary, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]domain.MonthSummary), args.Error(1)
 }
 
-func (m *MockRepository) ListByMonth(ctx context.Context, month string) ([]domain.Movement, error) {
+func (m *MockRepository) ListMovements(ctx context.Context, month string) ([]domain.Movement, error) {
 	args := m.Called(ctx, month)
 	return args.Get(0).([]domain.Movement), args.Error(1)
 }
 
-func (m *MockRepository) Totals(ctx context.Context) (map[string]map[string]int64, error) {
+func (m *MockRepository) ListCategoryTotals(ctx context.Context) (map[string]map[string]int64, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(map[string]map[string]int64), args.Error(1)
 }
 
-func (m *MockRepository) Find(ctx context.Context, id int64) (domain.Movement, error) {
+func (m *MockRepository) GetMovement(ctx context.Context, id int64) (domain.Movement, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockRepository) Create(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
+func (m *MockRepository) CreateMovement(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
 	args := m.Called(ctx, movement)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockRepository) Update(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
+func (m *MockRepository) UpdateMovement(ctx context.Context, movement domain.Movement) (domain.Movement, error) {
 	args := m.Called(ctx, movement)
 	return args.Get(0).(domain.Movement), args.Error(1)
 }
 
-func (m *MockRepository) SetDeleted(ctx context.Context, id int64, deleted bool) error {
-	args := m.Called(ctx, id, deleted)
+func (m *MockRepository) DeleteMovement(ctx context.Context, id int64) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockRepository) Recategorise(ctx context.Context, merchant, category string) (int, error) {
+func (m *MockRepository) RestoreMovement(ctx context.Context, id int64) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockRepository) RecategoriseMerchant(ctx context.Context, merchant, category string) (int, error) {
 	args := m.Called(ctx, merchant, category)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockRepository) List(ctx context.Context) ([]domain.Category, error) {
+func (m *MockRepository) ListCategories(ctx context.Context) ([]domain.Category, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]domain.Category), args.Error(1)
 }
 
-func (m *MockRepository) Ensure(ctx context.Context, categories []domain.Category) error {
+func (m *MockRepository) EnsureCategories(ctx context.Context, categories []domain.Category) error {
 	args := m.Called(ctx, categories)
 	return args.Error(0)
 }
 
-func (m *MockRepository) FindByUsername(ctx context.Context, username string) (domain.User, error) {
+func (m *MockRepository) GetUserByUsername(ctx context.Context, username string) (domain.User, error) {
 	args := m.Called(ctx, username)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockRepository) FindUser(ctx context.Context, id int64) (domain.User, error) {
+func (m *MockRepository) GetUser(ctx context.Context, id int64) (domain.User, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(domain.User), args.Error(1)
 }
 
-func (m *MockRepository) HasUsers(ctx context.Context) (bool, error) {
+func (m *MockRepository) CountUsers(ctx context.Context) (int, error) {
 	args := m.Called(ctx)
-	return args.Bool(0), args.Error(1)
+	return args.Int(0), args.Error(1)
 }
 
 func (m *MockRepository) CreateFirstUser(ctx context.Context, username, password string) (domain.User, error) {
@@ -105,7 +110,7 @@ func (m *MockRepository) CreateSession(ctx context.Context, userID int64, lifeti
 	return args.String(0), args.Get(1).(time.Time), args.Error(2)
 }
 
-func (m *MockRepository) FindSession(ctx context.Context, token string) (int64, error) {
+func (m *MockRepository) GetSession(ctx context.Context, token string) (int64, error) {
 	args := m.Called(ctx, token)
 	return args.Get(0).(int64), args.Error(1)
 }

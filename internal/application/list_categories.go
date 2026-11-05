@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Application) ListCategories(ctx context.Context) ([]domain.Category, error) {
-	categories, err := a.repo.List(ctx)
+	categories, err := a.repo.ListCategories(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("listing categories: %w", err)
 	}
