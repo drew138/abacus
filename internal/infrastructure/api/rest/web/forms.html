@@ -12,7 +12,7 @@
       <div class="fld"><span class="lbl">Paid with</span><div class="seg" role="radiogroup" aria-label="Paid with">{{range .Methods}}<label>{{.Label}}<input type="radio" name="method" value="{{.Value}}"{{if .Selected}} checked{{end}}></label>{{end}}</div></div>
       <div class="fld"><label for="f-note">Note (optional)</label><input id="f-note" name="note" maxlength="200" value="{{.Note}}" placeholder="Anything to remember"></div>
       {{if .FromStatement}}<label class="chk"><input type="checkbox" name="apply_to_merchant"> <span>Use this category for every {{.Merchant}} movement, now and in future statements</span></label>
-      <p class="hint" style="margin:0">From the Nu statement. Your edits are kept when the statement is read again.</p>{{end}}
+      <p class="hint" style="margin:0">From a bank statement. Your edits are kept when the statement is imported again.</p>{{end}}
       <div class="foot">{{if .ID}}<button type="button" class="btn danger" hx-delete="/movements/{{.ID}}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 8.5h5.6l.7-8.5"/></svg>Delete</button><span class="grow"></span>{{end}}<button type="button" class="btn" data-close-btn>Cancel</button><button class="btn primary" type="submit">{{if .ID}}Save changes{{else}}Add movement{{end}}</button></div>
     </form>
   </div>

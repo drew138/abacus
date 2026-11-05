@@ -38,7 +38,7 @@
 
 {{define "sidebar"}}<aside class="side" id="side" aria-label="Months">{{template "sidebar-items" .}}</aside>{{end}}
 {{define "sidebar-oob"}}<aside class="side" id="side" aria-label="Months" hx-swap-oob="true">{{template "sidebar-items" .}}</aside>{{end}}
-{{define "sidebar-items"}}<div class="side-head"><b>Abacus</b><span>Nu · COP</span></div>
+{{define "sidebar-items"}}<div class="side-head"><b>Abacus</b><span>COP</span></div>
 <div class="sec"><a class="item{{if .Trends}} sel{{end}}" href="/trends" hx-get="/trends" hx-target="#main" hx-push-url="true"><span class="ic">▦</span><span class="nm">Month to month</span></a></div>
 <div class="sec"><div class="sec-t">Months</div>
 {{range .Months}}<a class="item{{if .Selected}} sel{{end}}" href="/months/{{.Key}}" hx-get="/months/{{.Key}}" hx-target="#main" hx-push-url="true"><span class="ic">◷</span><span class="nm">{{.Name}}</span>{{if .Latest}}<span class="badge">{{.Badge}}</span>{{else}}<span class="amt-s">{{.Amount}}</span>{{end}}</a>
@@ -58,7 +58,6 @@
   <div class="fld"><label for="u">Username</label><input id="u" name="username" autocomplete="username" required autofocus value="{{.Username}}"></div>
   <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="current-password" required></div>
   <button class="btn primary lgo" type="submit">Sign in</button>
-  <div class="lfoot">Only reachable over Tailscale</div>
 </form>
 </body>
 </html>{{end}}
@@ -77,7 +76,6 @@
   <div class="fld"><label for="p">Password</label><input id="p" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="72"><span class="hint">At least 12 characters.</span></div>
   <div class="fld"><label for="c">Repeat the password</label><input id="c" name="confirm" type="password" autocomplete="new-password" required minlength="12" maxlength="72"></div>
   <button class="btn primary lgo" type="submit">Create account</button>
-  <div class="lfoot">Only reachable over Tailscale</div>
 </form>
 </body>
 </html>{{end}}

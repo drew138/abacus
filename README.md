@@ -3,12 +3,11 @@
 <h1 align="center">Abacus</h1>
 
 A small personal spending app: every movement by month, by category, and how each
-category moves month to month. Go, htmx and Postgres, built to run on a Raspberry Pi behind
-Caddy, reachable only over Tailscale.
+category moves month to month. Go, htmx and Postgres.
 
 ## How data arrives
 
-n8n reads the Nu statements from Paperless, categorises them and posts each month to
+An importer, such as an n8n workflow, reads bank statements, categorises them and posts them to
 `POST /api/import` with `Authorization: Bearer $IMPORT_TOKEN`. Every movement carries a
 `ref` built from its statement line, so importing the same statement again changes
 nothing. Movements you edit or delete in the app keep your version on later imports, and

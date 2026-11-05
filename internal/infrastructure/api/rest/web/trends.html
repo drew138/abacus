@@ -7,7 +7,7 @@
   {{template "ctrls" ""}}
 </header>
 <div class="content">
-{{if .Empty}}<div class="card empty"><b>No movements yet</b>They arrive from n8n after each Nu statement. You can also add one by hand with Add movement.</div>
+{{if .Empty}}<div class="card empty"><b>No movements yet</b>They arrive with each imported statement. You can also add one by hand with Add movement.</div>
 {{else}}
   <div class="kpis">
     <div class="card kpi"><div class="l">Moved to savings</div><div class="v" style="color:var(--down)">{{.Saved}}</div><div class="d note">{{.MonthsN}}</div></div>
